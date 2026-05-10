@@ -25,6 +25,8 @@ I look forward to seeing what we can accomplish as a team - this project will be
 **Github:** kasch890
 **Timezone:** ET
 **Preferred meeting times:** Weekends any time or weekdays from 12:40-2:30 or after 6:30
+
+
 ### Shaima Nimeri
 
 **About Me:**
@@ -37,6 +39,8 @@ building healthcare technology solutions.
 
 
 **GitHub:** Shushu2023
+**Time zone:** ET  
+**Preferred meeting times:** Mondays through Friday, 9 A.M.-1 P.M. or after 7 P.M. 
 
 
 ---
