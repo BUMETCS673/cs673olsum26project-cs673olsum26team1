@@ -25,3 +25,18 @@ I look forward to seeing what we can accomplish as a team - this project will be
 **Github:** kasch890
 **Timezone:** ET
 **Preferred meeting times:** Weekends any time or weekdays from 12:40-2:30 or after 6:30
+### Shaima Nimeri
+
+**About Me:**
+I am a Computer Science  master degree student at
+Boston University Metropolitan College. I have a bachelors degree in computer engineering
+I have experience with MERN stack
+development and am excited about
+building healthcare technology solutions.
+
+
+
+**GitHub:** Shushu2023
+
+
+---
