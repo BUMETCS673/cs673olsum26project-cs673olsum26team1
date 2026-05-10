@@ -26,7 +26,7 @@ I look forward to seeing what we can accomplish as a team - this project will be
 **Timezone:** ET
 **Preferred meeting times:** Weekends any time or weekdays from 12:40-2:30 or after 6:30
 
-
+---
 ### Shaima Nimeri
 
 **About Me:**
