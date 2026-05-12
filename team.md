@@ -49,6 +49,7 @@ building healthcare technology solutions.
 
 **About Me:**
 Hello everyone! My name is Kolya Gavlishin. This is my last course for BU MET's Master's of Software Development program. I am currently a HS ESL teacher, so this program has been a bit of a pivot for me. However, I've been really enjoying the challenge. I've learned so much so far!
+I'm looking forward to working on the project together!
 
 
 
