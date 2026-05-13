@@ -33,8 +33,8 @@ I look forward to seeing what we can accomplish as a team - this project will be
 I am a Computer Science  master degree student at
 Boston University Metropolitan College. I have a bachelors degree in computer engineering
 I have experience with MERN stack
-development and am excited about
-building healthcare technology solutions.
+development and I am very excited to
+build a healthcare technology solutions.
 
 
 
