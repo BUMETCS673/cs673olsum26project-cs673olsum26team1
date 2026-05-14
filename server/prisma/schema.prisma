@@ -1,13 +1,75 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 // Get a free hosted Postgres database in seconds: `npx create-db`
+//5-14-2026
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PATIENT
+  COORDINATOR
+  PROGRAM_DIRECTOR
+}
+
+model User {
+  id          Int        @id @default(autoincrement())
+  firebaseUid String     @unique
+  name        String
+  email       String     @unique
+  role        Role
+  createdAt   DateTime   @default(now())
+  auditLogs   AuditLog[]
+}
+
+model Patient {
+  id            Int            @id @default(autoincrement())
+  mrn           String         @unique
+  name          String
+  dateOfBirth   DateTime
+  bmi           Float
+  visitType     String         @default("")
+  insurance     String         @default("not clear")
+  consult       String         @default("not booked")
+  labs          String         @default("not complete")
+  hematology    String         @default("not required")
+  nephrology    String         @default("not required")
+  dietitian     String         @default("not required")
+  psychologist  String         @default("not required")
+  prevSurgery   String         @default("no")
+  endoscopy     String         @default("not required")
+  barium        String         @default("not required")
+  cardiology    String         @default("not required")
+  colonoscopy   String         @default("not required")
+  sleep         String         @default("not required")
+  createdAt     DateTime       @default(now())
+  auditLogs     AuditLog[]
+  notifications Notification[]
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  patientId Int?
+  userId    Int?
+  column    String
+  oldValue  String
+  newValue  String
+  timestamp DateTime @default(now())
+  patient   Patient? @relation(fields: [patientId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  patientId Int
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  patient   Patient  @relation(fields: [patientId], references: [id])
 }
