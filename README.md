@@ -1,4 +1,4 @@
-# Bariatic Path
+# Bariatric Path
 ## Overview
 Bariatric surgery programs require patients to complete a multi-stage evaluation process involving multiple specialists including surgeons, psychologists, dietitians, and endoscopic specialists before receiving surgical clearance. Today this process is managed through phone calls, spreadsheets, paper checklists, and disconnected systems. Patients have no visibility into their own progress, coordinators manually track dozens of patients across dozens of status columns, and program directors have no real-time insight into pipeline health. This fragmentation causes delays, missed appointments, lost documentation, and patient dropout. 
 
