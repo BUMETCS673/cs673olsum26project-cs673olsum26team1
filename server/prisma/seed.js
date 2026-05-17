@@ -1,3 +1,14 @@
+// AI-USAGE SUMMARY 
+// Tools: Vs Code Copilot 
+// Overall AI Contribution: ~90% 
+// AI-Assisted Areas: Initial code generation, data modeling, and sample data creation for seeding the database
+// Human Contributions: prompting AI for the the sample data required, adding comments, testing the seed script, 
+// and ensuring data variety for comprehensive testing of search functionality 
+// The seed script creates a variety of users, patients, audits, and notifications 
+// with different attributes to test the search functionality effectively.
+// Notes: I had an issue with reading the env file, so I added an explicit path to the dotenv 
+// config to ensure it works correctly. 
+
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const { PrismaClient } = require('@prisma/client');
