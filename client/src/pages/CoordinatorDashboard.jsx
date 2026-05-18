@@ -1,9 +1,13 @@
+import Navbar from '../components/Navbar';
+
 const CoordinatorDashboard = () => {
   return (
-    <div className="container mt-5">
-      <h1>Coordinator Dashboard</h1>
-    </div>
+    <>
+      <Navbar />
+      <div className="container mt-4">
+        <h2>Coordinator portal</h2>
+      </div>
+    </>
   );
-};
-
+}
 export default CoordinatorDashboard;
