@@ -1,14 +1,24 @@
 const express = require('express');
 const router = express.Router();
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const { searchPatients } = require('../searchDB/searchDB');
 
 // GET /api/patients
 // Get all patients (coordinator and director)
+// Supports search query parameter to filter by name, MRN, or date of birth
 router.get('/', async (req, res) => {
+  
   try {
-    res.json({ message: 'Get all patients route working' });
+    const { search } = req.query;
+    const patients = await searchPatients(prisma, search);
+    res.json(patients);
+    //console.log(`Search query: "${search}" - Found ${patients.length} patients`);
+    //console.log(patients.map(p => `  - ${p.name} (MRN: ${p.mrn}, DOB: ${p.dateOfBirth.toISOString().split('T')[0]})`).join('\n'));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+
 });
 
 // GET /api/patients/:id
@@ -16,7 +26,13 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    res.json({ message: `Get patient ${id} route working` });
+    const patient = await prisma.patient.findUnique({
+      where: { id: parseInt(id) }
+    });
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+    res.json(patient);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
