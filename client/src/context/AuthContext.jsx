@@ -8,10 +8,20 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);    
   const [loading, setLoading] = useState(true);
 
-  const refreshUser = async () => {
-    const dbUser = await apiRequest('/auth/me');
-    setUser(dbUser);
-    return dbUser;
+  // Refresh authenticated user from backend
+const refreshUser = async () => {
+    try {
+      const dbUser = await apiRequest('/auth/me');
+      setUser(dbUser);
+  
+      return dbUser;
+    } catch (error) {
+      console.error('refreshUser failed:', error);
+  
+      setUser(null);
+  
+      return null;
+    }
   };
 
   useEffect(() => {

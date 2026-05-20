@@ -103,9 +103,7 @@ router.post(
         where: { firebaseUid },
       });
 
-      // EDGE CASE: user authenticated with Firebase (e.g. Google) but has no
-      // DB record yet — this happens if they "log in" with Google before ever
-      // "registering". We auto-create them as PATIENT so the flow doesn't break.
+      
       if (!user) {
         user = await prisma.user.create({
           data: {
@@ -155,7 +153,6 @@ router.post(
 // Get current user role
 router.get('/me', verifyAuth, async (req, res) => {
   try {
-    // verifyAuth middleware already loaded the user into req.user
     return res.status(200).json({
       id: req.user.id,
       name: req.user.name,

@@ -25,7 +25,7 @@ services:
     ports:
       - "5001:5001"
     environment:
-      DATABASE_URL: "postgresql://bariatric_user:bariatric2026@localhost:5432/bariatricpath"
+      DATABASE_URL: "postgresql://app_user:app_pass@db:5432/bariatricpath"
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
