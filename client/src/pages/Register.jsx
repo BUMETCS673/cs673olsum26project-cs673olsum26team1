@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Form, Button, Spinner } from 'react-bootstrap';
+import { useAuth } from '../context/AuthContext';
 import {
   auth,
   createUserWithEmailAndPassword,
@@ -20,6 +21,7 @@ function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -56,6 +58,7 @@ function RegisterPage() {
         body: JSON.stringify({ name: formData.name, idToken }),
       });
 
+      await refreshUser();
       showSuccess(`Welcome, ${user.name}! Your account is ready.`);
       navigate(getRouteForRole(user.role));
     } catch (err) {
@@ -99,7 +102,8 @@ function RegisterPage() {
           throw err;
         }
       }
-
+      
+      await refreshUser();
       showSuccess(`Welcome, ${user.name}!`);
       navigate(getRouteForRole(user.role));
     } catch (err) {
