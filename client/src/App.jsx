@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage';
 import PatientPortal from './pages/PatientPortal';
 import CoordinatorDashboard from './pages/CoordinatorDashboard';
 import DirectorDashboard from './pages/DirectorDashboard';
+import BMIForm from './pages/BMIForm';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
@@ -13,6 +14,8 @@ function App() {
         <Route path="/patient" element={<PatientPortal />} />
         <Route path="/coordinator" element={<CoordinatorDashboard />} />
         <Route path="/director" element={<DirectorDashboard />} />
+        {/* Temporary route for manual testing of BMIForm */}
+        <Route path="/bmi" element={<BMIForm />} />
       </Routes>
     </BrowserRouter>
   );
