@@ -248,7 +248,8 @@ describe('searchDB', () => {
       expect(callArgs.where.OR).toContainEqual(
         expect.objectContaining({
           dateOfBirth: expect.objectContaining({
-            equals: expect.any(Date)
+            gte: expect.any(Date),
+            lt: expect.any(Date)
           })
         })
       );
@@ -265,7 +266,8 @@ describe('searchDB', () => {
       expect(callArgs.where.OR).toContainEqual(
         expect.objectContaining({
           dateOfBirth: expect.objectContaining({
-            equals: expect.any(Date)
+            gte: expect.any(Date),
+            lt: expect.any(Date)
           })
         })
       );
