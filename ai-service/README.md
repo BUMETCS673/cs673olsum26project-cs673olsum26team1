@@ -1,1 +1,0 @@
-## Python FastAPI microservice for RAG-based AI chatbot. To beginb in iteration 2
