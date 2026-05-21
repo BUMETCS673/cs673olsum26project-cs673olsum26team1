@@ -17,6 +17,7 @@ const searchPatients = async (prisma, searchQuery) => {
 
   try {
     const parsedDate = parseDate(searchQuery);
+    const dateRange = parsedDate ? getDateRange(parsedDate) : null;
     
     const patients = await prisma.patient.findMany({
       where: {
@@ -36,11 +37,12 @@ const searchPatients = async (prisma, searchQuery) => {
             }
           },
           // Search by date of birth (if valid date parsed)
-          ...(parsedDate
+          ...(dateRange
             ? [
               {
                 dateOfBirth: {
-                  equals: parsedDate
+                  gte: dateRange.gte,
+                  lt: dateRange.lt
                 }
               }
             ]
@@ -53,6 +55,16 @@ const searchPatients = async (prisma, searchQuery) => {
   } catch (error) {
     throw new Error(`Patient search failed: ${error.message}`);
   }
+};
+
+const getDateRange = (date) => {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+
+  return { gte: start, lt: end };
 };
 
 /**
