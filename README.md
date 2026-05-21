@@ -6,7 +6,7 @@ Bariatric surgery programs require patients to complete a multi-stage evaluation
 To create a web based clinical evaluation management system that digitizes and centralizes the entire bariatric  journey evaluation workflow. It gives patients a self service portal to track their progress, gives coordinators a single dashboard to manage all patient statuses and order updates , and gives program directors a real time view of the full patient pipeline. 
 
 ## Team Members
-Shaima Nimeri - Requirement lead, Design/Implemenation lead  
+Shaima Nimeri - Team lead, Requirement lead, Design/Implemenation lead  
 Fatimah Hassan - Security lead, Configuration lead  
 Kolya Gavlisin - Quality Assurance lead, Design/Implementation lead  
 Kai Fernandes - Team Lead, Configuration lead
