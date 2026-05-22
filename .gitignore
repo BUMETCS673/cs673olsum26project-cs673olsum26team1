@@ -1,33 +1,40 @@
-# Dependencies
+# Dependencies 
 node_modules/
-client/node_modules/
-server/node_modules/
 
-# Environment variables
+# Environment variables 
 .env
 .env.local
-server/.env
-client/.env
-client/.env.local
+.env.*.local
+.env.development
+.env.production
 
-# Firebase
-server/serviceAccountKey.json
+# Firebase secrets
+serviceAccountKey.json
+firebase-adminsdk-*.json
+*-firebase-adminsdk-*.json
 
-# Build output
-client/dist/
-client/build/
+#  Build output
+dist/
+build/
+dist-ssr/
 
-# Logs
+# Logs 
 *.log
+logs/
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# OS files
+# OS files 
 .DS_Store
 Thumbs.db
 
-# IDE
+#  IDE / Editor
 .vscode/
 .idea/
+*.suo
+*.sw?
 
-# Testing
+# Testing 
 coverage/

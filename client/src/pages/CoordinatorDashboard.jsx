@@ -1,3 +1,5 @@
+import Navbar from '../components/Navbar';
+
 import React, { useState, useEffect, useRef } from "react";
 //import { apiRequest } from "../utils/api";
 
@@ -47,9 +49,11 @@ const CoordinatorDashboard = () => {
   const filteredPatients = patients;
 
   return (
-    <div className="container mt-5">
-      <h1>Coordinator Dashboard</h1>
-
+    <>
+      <Navbar />
+      <div className="container mt-4">
+        <h2>Coordinator portal</h2>
+  
       <div className="mb-3" style={{ maxWidth: 480 }}>
         <input
           type="search"
@@ -92,7 +96,7 @@ const CoordinatorDashboard = () => {
         </table>
       )}
     </div>
+    </>
   );
-};
-
+}
 export default CoordinatorDashboard;
