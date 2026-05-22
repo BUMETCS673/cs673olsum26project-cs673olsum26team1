@@ -149,28 +149,28 @@ describe('validateDate', () => {
       expect(range).toHaveProperty('lt');
     });
 
-    test('gte is midnight (start of day) in local time', () => {
-      const input = new Date(2024, 5, 15, 14, 30, 0); // June 15 2024, 2:30 PM
+    test('gte is UTC midnight (start of day) for the input date', () => {
+      const input = new Date(2024, 5, 15, 14, 30, 0); // June 15 2024, 2:30 PM local
       const { gte } = getDateRange(input);
-      expect(gte.getHours()).toBe(0);
-      expect(gte.getMinutes()).toBe(0);
-      expect(gte.getSeconds()).toBe(0);
-      expect(gte.getMilliseconds()).toBe(0);
-      expect(gte.getFullYear()).toBe(2024);
-      expect(gte.getMonth()).toBe(5);
-      expect(gte.getDate()).toBe(15);
+      expect(gte.getUTCHours()).toBe(0);
+      expect(gte.getUTCMinutes()).toBe(0);
+      expect(gte.getUTCSeconds()).toBe(0);
+      expect(gte.getUTCMilliseconds()).toBe(0);
+      expect(gte.getUTCFullYear()).toBe(2024);
+      expect(gte.getUTCMonth()).toBe(5);
+      expect(gte.getUTCDate()).toBe(15);
     });
 
-    test('lt is midnight at the start of the next day', () => {
+    test('lt is UTC midnight at the start of the next day', () => {
       const input = new Date(2024, 5, 15);
       const { lt } = getDateRange(input);
-      expect(lt.getDate()).toBe(16);
-      expect(lt.getMonth()).toBe(5);
-      expect(lt.getFullYear()).toBe(2024);
-      expect(lt.getHours()).toBe(0);
-      expect(lt.getMinutes()).toBe(0);
-      expect(lt.getSeconds()).toBe(0);
-      expect(lt.getMilliseconds()).toBe(0);
+      expect(lt.getUTCDate()).toBe(16);
+      expect(lt.getUTCMonth()).toBe(5);
+      expect(lt.getUTCFullYear()).toBe(2024);
+      expect(lt.getUTCHours()).toBe(0);
+      expect(lt.getUTCMinutes()).toBe(0);
+      expect(lt.getUTCSeconds()).toBe(0);
+      expect(lt.getUTCMilliseconds()).toBe(0);
     });
 
     test('lt is exactly 24 hours after gte', () => {
@@ -182,16 +182,16 @@ describe('validateDate', () => {
     test('rolls month over correctly at month boundary', () => {
       const input = new Date(2024, 0, 31); // Jan 31
       const { lt } = getDateRange(input);
-      expect(lt.getMonth()).toBe(1); // February
-      expect(lt.getDate()).toBe(1);
+      expect(lt.getUTCMonth()).toBe(1); // February
+      expect(lt.getUTCDate()).toBe(1);
     });
 
     test('rolls year over correctly at year boundary', () => {
       const input = new Date(2024, 11, 31); // Dec 31
       const { lt } = getDateRange(input);
-      expect(lt.getFullYear()).toBe(2025);
-      expect(lt.getMonth()).toBe(0);
-      expect(lt.getDate()).toBe(1);
+      expect(lt.getUTCFullYear()).toBe(2025);
+      expect(lt.getUTCMonth()).toBe(0);
+      expect(lt.getUTCDate()).toBe(1);
     });
 
     test('does not mutate the input date', () => {

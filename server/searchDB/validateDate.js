@@ -1,6 +1,9 @@
 /**
- * Validate if a string is a valid date format and parse it.
+ * Date parsing and validation utilities for patient search queries.
  * Supports formats: MM/DD/YYYY, YYYY-MM-DD, ISO 8601
+ */
+
+/**
  * @param {string} dateString
  * @returns {Date|null}
  */
@@ -50,17 +53,14 @@ const parseDate = (dateString) => {
 const isValidDate = (dateString) => parseDate(dateString) !== null;
 
 /**
- * Returns a [start-of-day, start-of-next-day) range for use in Prisma date queries.
+ * Returns a UTC [start-of-day, start-of-next-day) range for Prisma date queries.
+ * Uses Date.UTC so the range matches how dates are stored in the DB (UTC midnight).
  * @param {Date} date
  * @returns {{ gte: Date, lt: Date }}
  */
 const getDateRange = (date) => {
-  const start = new Date(date);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
-
+  const start = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const end = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 1));
   return { gte: start, lt: end };
 };
 
