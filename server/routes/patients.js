@@ -3,22 +3,20 @@ const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { searchPatients } = require('../searchDB/searchDB');
+const { computeProgress } = require('../searchDB/calculateProgress');
 
 // GET /api/patients
-// Get all patients (coordinator and director)
-// Supports search query parameter to filter by name, MRN, or date of birth
+// Returns all patients with MRN, name, BMI, specialist type, insurance status, and progress.
+// Supports: ?search=  ?specialistType=  ?insuranceStatus=
 router.get('/', async (req, res) => {
-  
   try {
-    const { search } = req.query;
-    const patients = await searchPatients(prisma, search);
-    res.json(patients);
-    //console.log(`Search query: "${search}" - Found ${patients.length} patients`);
-    //console.log(patients.map(p => `  - ${p.name} (MRN: ${p.mrn}, DOB: ${p.dateOfBirth.toISOString().split('T')[0]})`).join('\n'));
+    const { search, specialistType, insuranceStatus } = req.query;
+    const patients = await searchPatients(prisma, search, { specialistType, insuranceStatus });
+    const result = patients.map((p) => ({ ...p, progress: computeProgress(p) }));
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-
 });
 
 // GET /api/patients/:id
