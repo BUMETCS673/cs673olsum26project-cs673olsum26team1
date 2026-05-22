@@ -1,28 +1,34 @@
+import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
-
-import React, { useState, useEffect, useRef } from "react";
-//import { apiRequest } from "../utils/api";
+import PatientTableList from '../components/PatientTableList';
+import SpecialistFilter from '../components/SpecialistFilter';
+import InsuranceFilter from '../components/InsuranceFilter';
 
 const CoordinatorDashboard = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [specialistType, setSpecialistType] = useState('');
+  const [insuranceStatus, setInsuranceStatus] = useState('');
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const searchDebounceRef = useRef(null);
+  const debounceRef = useRef(null);
 
-  // Fetch patients from backend and apply server-side search with debounce
+  // Fetch patients with debounce; reruns when search or filters change
   useEffect(() => {
-    const fetchPatients = async (query = "") => {
+    const fetchPatients = async () => {
       try {
         setLoading(true);
         setError(null);
-        const endpoint = `/api/patients${query.trim() ? `?search=${encodeURIComponent(query.trim())}` : ""}`;
-        const response = await fetch(endpoint);
-        if (!response.ok) {
-          throw new Error('Unable to load patients');
-        }
-        const data = await response.json();
-        setPatients(data);
+
+        const params = new URLSearchParams();
+        if (searchTerm.trim()) params.set('search', searchTerm.trim());
+        if (specialistType) params.set('specialistType', specialistType);
+        if (insuranceStatus) params.set('insuranceStatus', insuranceStatus);
+
+        const qs = params.toString();
+        const response = await fetch(`/api/patients${qs ? `?${qs}` : ''}`);
+        if (!response.ok) throw new Error('Unable to load patients');
+        setPatients(await response.json());
       } catch (err) {
         setError(err.message);
       } finally {
@@ -30,73 +36,53 @@ const CoordinatorDashboard = () => {
       }
     };
 
-    if (searchDebounceRef.current) {
-      clearTimeout(searchDebounceRef.current);
-    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(fetchPatients, 300);
+    return () => clearTimeout(debounceRef.current);
+  }, [searchTerm, specialistType, insuranceStatus]);
 
-    searchDebounceRef.current = setTimeout(() => {
-      fetchPatients(searchTerm);
-    }, 300);
-
-    return () => {
-      if (searchDebounceRef.current) {
-        clearTimeout(searchDebounceRef.current);
-      }
-    };
-  }, [searchTerm]);
-
-  // Patients are already filtered by the backend search endpoint
-  const filteredPatients = patients;
+  const hasActiveFilters = searchTerm.trim() || specialistType || insuranceStatus;
 
   return (
     <>
       <Navbar />
       <div className="container mt-4">
-        <h2>Coordinator portal</h2>
-  
-      <div className="mb-3" style={{ maxWidth: 480 }}>
-        <input
-          type="search"
-          className="form-control"
-          placeholder="Search patients by name, DOB (YYYY-MM-DD) or MRN"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          aria-label="Search patients"
-        />
+        <h2>Coordinator Portal</h2>
+
+        {/* Search and filter controls */}
+        <div className="row g-2 mb-3 align-items-end" style={{ maxWidth: 900 }}>
+          <div className="col-sm-5">
+            <input
+              type="search"
+              className="form-control"
+              placeholder="Search by name, DOB, or MRN"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              aria-label="Search patients"
+            />
+          </div>
+          <div className="col-sm-4">
+            <SpecialistFilter value={specialistType} onChange={setSpecialistType} />
+          </div>
+          <div className="col-sm-3">
+            <InsuranceFilter value={insuranceStatus} onChange={setInsuranceStatus} />
+          </div>
+        </div>
+
+        {error && <div className="alert alert-danger">{error}</div>}
+
+        {loading ? (
+          <p>Loading patients...</p>
+        ) : patients.length === 0 ? (
+          <p className="text-muted">
+            {hasActiveFilters ? 'No patients match your filters.' : 'No patients found.'}
+          </p>
+        ) : (
+          <PatientTableList patients={patients} />
+        )}
       </div>
-
-      {error && <div className="alert alert-danger">{error}</div>}
-
-      {loading ? (
-        <p>Loading patients...</p>
-      ) : filteredPatients.length === 0 ? (
-        <p className="text-muted">
-          {searchTerm.trim() ? "No patients match your search." : "No patients found."}
-        </p>
-      ) : (
-        <table className="table table-striped table-hover">
-          <thead className="table-light">
-            <tr>
-              <th>Name</th>
-              <th>MRN</th>
-              <th>Date of Birth</th>
-              <th>BMI</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredPatients.map((patient) => (
-              <tr key={patient.id}>
-                <td>{patient.name}</td>
-                <td>{patient.mrn}</td>
-                <td>{new Date(patient.dateOfBirth).toLocaleDateString()}</td>
-                <td>{patient.bmi}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
     </>
   );
-}
+};
+
 export default CoordinatorDashboard;
