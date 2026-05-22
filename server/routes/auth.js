@@ -42,29 +42,36 @@ router.post(
           error: 'User already registered',
         });
       }
-      const newUser = await prisma.user.create({
-        data: {
-          firebaseUid,
-          name,
-          email,
-          role: 'PATIENT',
-        },
+      const newUser = await prisma.$transaction(async (tx) => {
+        const created = await tx.user.create({
+          data: {
+            firebaseUid,
+            name,
+            email,
+            role: 'PATIENT',
+          },
+        });
+      
+        await tx.auditLog.create({
+          data: {
+            userId: created.id,
+            column: 'user.created',
+            oldValue: '',
+            newValue: `User ${email} registered as PATIENT`,
+          },
+        });
+      
+        return created;
       });
-      await prisma.auditLog.create({
-        data: {
-          userId: newUser.id,
-          column: 'user.created',
-          oldValue: '',
-          newValue: `User ${email} registered as PATIENT`,
-        },
-      });
-       return res.status(201).json({
+      
+      return res.status(201).json({
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
         createdAt: newUser.createdAt,
       });
+    
     } catch (error) {
       console.error('Registration error:', error);
 
