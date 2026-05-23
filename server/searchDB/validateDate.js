@@ -1,3 +1,10 @@
+// AI-USAGE SUMMARY
+// Tools: Claude Code
+// Overall AI Contribution: ~100%
+// AI-Assisted Areas: Initial code generation and date parsing logic
+// Human Contributions: Modularizing the date parsing and validation logic into a separate file (validateDate.js) for better organization and reusability.
+// Notes: see below for detailed breakdown of contributions and modifications.
+
 /**
  * Date parsing and validation utilities for patient search queries.
  * Supports formats: MM/DD/YYYY, YYYY-MM-DD, ISO 8601
@@ -8,6 +15,17 @@
  * @returns {Date|null}
  */
 const parseDate = (dateString) => {
+      // AI-ASSISTED: YES 
+// Tool: VS Code Copilot
+// Prompt Summary: My prompt included the user story and acceptance tests for the coordinator dashboard, 
+// which included the requirement for a patient search endpoint
+// I prompted a refactoring to bring it into its own file.
+// AI Contribution: Initial draft (~100%) 
+// Modifications: 
+//  - Refactored from searchDB.js to a separate validateDate.js module for better modularity and reusability.
+// Verification: 
+// - Manually tested the route in the coordinator dashboard to ensure data is fetched and displayed correctly, and that the search and filter functionalities work as expected.
+// Confidence: High
   if (!dateString) return null;
 
   const trimmed = dateString.trim();

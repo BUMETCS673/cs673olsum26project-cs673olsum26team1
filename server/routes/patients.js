@@ -1,3 +1,11 @@
+// AI-USAGE SUMMARY
+// Tools: Vs Code Copilot and Claud Code (I was experimenting with different AI tools)
+// Overall AI Contribution: ~90%
+// AI-Assisted Areas: Initial code generation, error handling, and route structure
+// Human Contributions: Modularizing the search logic. Originally, the AI put it all in the route handler, 
+// but I moved it to a separate function in the searchDB module for better organization and reusability. 
+// Notes: see below for detailed breakdown of contributions and modifications.
+
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
@@ -9,6 +17,17 @@ const { computeProgress } = require('../searchDB/calculateProgress');
 // Returns all patients with MRN, name, BMI, specialist type, insurance status, and progress.
 // Supports: ?search=  ?specialistType=  ?insuranceStatus=
 router.get('/', async (req, res) => {
+  // AI-ASSISTED: YES 
+// Tool: Claude Code
+// Prompt Summary: My prompt included the user story and acceptance tests for the coordinator dashboard, 
+// which included the requirement for a patient search endpoint that supports filtering by specialist type and insurance status.
+// I prompted a refactoring to bring it into its own component.
+// AI Contribution: Initial draft (~90%) 
+// Modifications: 
+//  - Refactored from inline code in the coordinator dashboard to the searchDB module for better modularity and reusability. 
+// Verification: 
+// - Manually tested the route in the coordinator dashboard to ensure data is fetched and displayed correctly, and that the search and filter functionalities work as expected.
+// Confidence: High
   try {
     const { search, specialistType, insuranceStatus } = req.query;
     const patients = await searchPatients(prisma, search, { specialistType, insuranceStatus });
@@ -22,6 +41,7 @@ router.get('/', async (req, res) => {
 // GET /api/patients/:id
 // Get one patient by ID
 router.get('/:id', async (req, res) => {
+  //initial route to get patient by ID, not currently used in frontend but may be useful for future features like a patient detail view
   try {
     const { id } = req.params;
     const patient = await prisma.patient.findUnique({

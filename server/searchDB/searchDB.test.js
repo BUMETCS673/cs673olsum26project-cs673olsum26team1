@@ -1,3 +1,11 @@
+// AI-USAGE SUMMARY
+// Tools: Claude Code
+// Overall AI Contribution: ~95%
+// AI-Assisted Areas: Generation of unit tests
+// Human Contributions: I prompted and reviewed all of the generated tests to ensure they accurately reflect the business logic and requirements. 
+// Notes: I'm not very familair with Jest, so this was a good opportunity to learn more about unit tests in Jest. 
+
+
 /**
  * Unit tests for searchDB.js
  * Tests all search and date parsing functionality
