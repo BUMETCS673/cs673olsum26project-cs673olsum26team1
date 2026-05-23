@@ -5,7 +5,7 @@
 // Human Contributions: prompting AI for the the sample data required, adding comments, testing the seed script,
 // and ensuring data variety for comprehensive testing of search functionality
 // The seed script creates a variety of users, patients, audits, and notifications
-// with different attributes to test the search functionality effectively.
+// with different attributes to test the search functionality and filtering effectively.
 // Notes: I had an issue with reading the env file, so I added an explicit path to the dotenv
 // config to ensure it works correctly.
 
