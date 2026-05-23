@@ -14,7 +14,6 @@
 const { computeProgress } = require('./calculateProgress');
 const { parseDate, isValidDate, getDateRange } = require('./validateDate');
 
-
 /**
  * Search for patients by name, MRN, or date of birth.
  * Optionally filter by specialistType (visitType) and insuranceStatus (insurance).
