@@ -71,24 +71,8 @@ const searchPatients = async (prisma, searchQuery, filters = {}) => {
   }
 };
 
-/**
- * Get all patients without filtering
- * @param {PrismaClient} prisma - Prisma client instance
- * @returns {Promise<Array>} Array of all patient records
- */
-const getAllPatients = async (prisma) => {
-  //AI notes similar to searchPatients
-  try {
-    return await prisma.patient.findMany();
-  } catch (error) {
-    throw new Error(`Failed to retrieve patients: ${error.message}`);
-  }
-};
+
 
 module.exports = {
   searchPatients,
-  getAllPatients,
-  computeProgress,
-  isValidDate,
-  parseDate
 };

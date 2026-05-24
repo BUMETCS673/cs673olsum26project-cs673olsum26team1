@@ -11,7 +11,8 @@
  * Tests all search and date parsing functionality
  */
 
-const { searchPatients, getAllPatients, parseDate, isValidDate } = require('./searchDB');
+const { searchPatients } = require('./searchDB');
+const { parseDate, isValidDate } = require('./validateDate');
 
 describe('searchDB', () => {
   let mockPrisma;
@@ -29,42 +30,6 @@ describe('searchDB', () => {
     jest.clearAllMocks();
   });
 
-
-
-  // ============================================
-  // Tests for getAllPatients()
-  // ============================================
-  describe('getAllPatients', () => {
-    test('should return all patients from database', async () => {
-      const mockPatients = [
-        { id: 1, name: 'John Doe', mrn: '12345' },
-        { id: 2, name: 'Jane Smith', mrn: '67890' }
-      ];
-      mockPrisma.patient.findMany.mockResolvedValue(mockPatients);
-
-      const result = await getAllPatients(mockPrisma);
-
-      expect(mockPrisma.patient.findMany).toHaveBeenCalledWith();
-      expect(result).toEqual(mockPatients);
-      expect(result).toHaveLength(2);
-    });
-
-    test('should return empty array when no patients exist', async () => {
-      mockPrisma.patient.findMany.mockResolvedValue([]);
-
-      const result = await getAllPatients(mockPrisma);
-
-      expect(result).toEqual([]);
-      expect(result).toHaveLength(0);
-    });
-
-    test('should throw error when database query fails', async () => {
-      const error = new Error('Database connection failed');
-      mockPrisma.patient.findMany.mockRejectedValue(error);
-
-      await expect(getAllPatients(mockPrisma)).rejects.toThrow('Failed to retrieve patients');
-    });
-  });
 
   // ============================================
   // Tests for searchPatients()

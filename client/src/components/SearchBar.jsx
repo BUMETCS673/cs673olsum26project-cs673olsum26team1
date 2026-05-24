@@ -11,7 +11,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import SpecialistFilter from './SpecialistFilter';
 import InsuranceFilter from './InsuranceFilter';
 import PatientTableList from './PatientTableList';
-const API_URL = import.meta.env.VITE_API_URL;
+import {apiRequest} from '../utils/api';
 
 const SearchBar = () => {
         // AI-ASSISTED: YES 
@@ -47,9 +47,8 @@ const SearchBar = () => {
         if (insuranceStatus) params.set('insuranceStatus', insuranceStatus);
 
         const qs = params.toString();
-        const response = await fetch(`${API_URL}/patients${qs ? `?${qs}` : ''}`);
-        if (!response.ok) throw new Error('Unable to load patients');
-        setPatients(await response.json());
+        const data = await apiRequest(`/patients${qs ? `?${qs}` : ''}`);
+        setPatients(data);
       } catch (err) {
         setError(err.message);
       } finally {
