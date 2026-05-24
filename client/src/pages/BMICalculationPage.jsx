@@ -15,8 +15,9 @@ function BMICalculationPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const heightMeters = height / 100;
-    const bmi = weight / (heightMeters * heightMeters);
+    const heightInches = Number(height);
+    const weightPounds = Number(weight)
+    const bmi = (weightPounds *703)/(heightInches * heightInches); 
 
     alert(`Your BMI is ${bmi.toFixed(1)}`);
 
@@ -50,7 +51,7 @@ function BMICalculationPage() {
 
       <form onSubmit={handleSubmit}>
         <input
-          placeholder="Height (cm)"
+          placeholder="Height (inches)"
           value={height}
           onChange={(e) => setHeight(e.target.value)}
         />
@@ -58,7 +59,7 @@ function BMICalculationPage() {
         <br />
 
         <input
-          placeholder="Weight (kg)"
+          placeholder="Weight (pounds)"
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
         />
