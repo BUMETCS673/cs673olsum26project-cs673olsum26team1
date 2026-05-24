@@ -34,9 +34,9 @@ function BMICalculationPage() {
     <>
     <Navbar />
     <div style={{ padding: 20 }}>
-      <h2>BMI Calculation Page</h2>
+      <h2>BMI Calculation</h2>
 
-      {user && <p>Welcome {user.name}</p>}
+      {user && <p>Welcome {user.name}, let's calculate your BMI.</p>}
 
       <form onSubmit={handleSubmit}>
         <input
