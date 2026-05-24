@@ -60,8 +60,15 @@ function RegisterPage() {
 
       await refreshUser();
       showSuccess(`Welcome, ${user.name}! Your account is ready.`);
-      navigate(getRouteForRole(user.role));
-    } catch (err) {
+      navigate('/bmi', {
+        state: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      });
+        } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
         showError('An account with this email already exists. Try logging in.');
       } else if (err.code === 'auth/invalid-email') {
