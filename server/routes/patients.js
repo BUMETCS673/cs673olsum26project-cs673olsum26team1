@@ -12,11 +12,12 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { searchPatients } = require('../searchDB/searchDB');
 const { computeProgress } = require('../searchDB/calculateProgress');
+const {verifyAuth} = require('../middleware/verifyAuth');
 
 // GET /api/patients
 // Returns all patients with MRN, name, BMI, specialist type, insurance status, and progress.
 // Supports: ?search=  ?specialistType=  ?insuranceStatus=
-router.get('/', async (req, res) => {
+router.get('/', verifyAuth, async (req, res) => {
   // AI-ASSISTED: YES 
 // Tool: Claude Code
 // Prompt Summary: My prompt included the user story and acceptance tests for the coordinator dashboard, 
@@ -40,7 +41,7 @@ router.get('/', async (req, res) => {
 
 // GET /api/patients/:id
 // Get one patient by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', verifyAuth, async (req, res) => {
   //initial route to get patient by ID, not currently used in frontend but may be useful for future features like a patient detail view
   try {
     const { id } = req.params;

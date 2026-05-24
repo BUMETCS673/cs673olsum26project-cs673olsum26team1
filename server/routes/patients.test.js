@@ -1,3 +1,12 @@
+// AI-USAGE SUMMARY
+// Tools: Claude Code
+// Overall AI Contribution: ~100%
+// AI-Assisted Areas: - Test structure and organization: The AI generated the entire test suite structure, 
+// including the describe/test blocks, setup, and assertions.
+// Human Contributions: I prompted AI to create an integration test suite for the GET /api/patients endpoint
+// I reviewed the generated code for correctness and completeness.
+// Notes: I am not a testing expert, so I asked AI to create these comprehensive tests 
+
 /**
  * Integration tests for GET /api/patients
  *
@@ -21,7 +30,13 @@ jest.mock('@prisma/client', () => ({
   })),
 }));
 
-// Import router AFTER mock is registered
+// Bypass auth so tests focus on route/search logic, not Firebase
+jest.mock('../middleware/verifyAuth', () => ({
+  verifyAuth: (req, res, next) => next(),
+  requireRole: () => (req, res, next) => next(),
+}));
+
+// Import router AFTER mocks are registered
 const patientRouter = require('./patients');
 
 // Minimal app — no auth middleware, no unrelated routes
