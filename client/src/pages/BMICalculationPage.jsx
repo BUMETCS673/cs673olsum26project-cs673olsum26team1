@@ -9,11 +9,6 @@ function BMICalculationPage() {
 
   const user = location.state; // data passed from Register
 
-  if (!user) {
-    navigate('/register');
-    return null;
-  }
-
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
 
@@ -27,7 +22,22 @@ function BMICalculationPage() {
 
     // later: save to backend here
 
-    navigate('/patient/portal');
+    
+    if (bmi > 27) {
+      navigate('/patient/portal', {
+        state: {
+          ...user,
+          bmi: bmi.toFixed(1),
+        },
+      });
+    } else {
+      navigate('/bmi-ineligible', {
+        state: {
+          ...user,
+          bmi: bmi.toFixed(1),
+        },
+      });
+    }
   };
 
   return (

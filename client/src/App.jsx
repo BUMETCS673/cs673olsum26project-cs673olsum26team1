@@ -7,6 +7,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import RegisterPage from './pages/Register';
 import BMICalculationPage from './pages/BMICalculationPage';
+import BmiIneligiblePage from './pages/BmiIneligiblePage';
 import LoginPage from './pages/LoginPage';
 import PatientPortal from './pages/PatientPortal';
 import CoordinatorDashboard from './pages/CoordinatorDashboard';
@@ -23,6 +24,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/bmi-calculation" element={<BMICalculationPage />} />
+          <Route path="/bmi-ineligible" element={<BmiIneligiblePage />} />
 
           {/* Protected routes — one canonical path each */}
           <Route
