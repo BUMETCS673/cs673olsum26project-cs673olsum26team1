@@ -7,6 +7,11 @@ function BMICalculationPage() {
 
   const user = location.state; // data passed from Register
 
+  if (!user) {
+    navigate('/register');
+    return null;
+  }
+
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
 
