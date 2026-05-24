@@ -1,5 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import Navbar from '../components/Navbar';
+
 
 function BMICalculationPage() {
   const location = useLocation();
@@ -29,6 +31,8 @@ function BMICalculationPage() {
   };
 
   return (
+    <>
+    <Navbar />
     <div style={{ padding: 20 }}>
       <h2>BMI Calculation Page</h2>
 
@@ -54,6 +58,7 @@ function BMICalculationPage() {
         <button type="submit">Calculate BMI</button>
       </form>
     </div>
+    </>
   );
 }
 
