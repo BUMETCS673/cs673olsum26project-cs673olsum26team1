@@ -60,7 +60,7 @@ function RegisterPage() {
 
       await refreshUser();
       showSuccess(`Welcome, ${user.name}! Your account is ready.`);
-      navigate('/bmi', {
+      navigate('/bmi-calculation', {
         state: {
           id: user.id,
           name: user.name,
