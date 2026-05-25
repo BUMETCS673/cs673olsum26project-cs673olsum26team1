@@ -46,6 +46,7 @@ jobs:
           cd client && npm install --no-save
           npx eslint src/ \
             --rule '{"complexity":["warn",{"max":10}]}' \
+            --rule '{"react-refresh/only-export-components":["off"]}' \
             --format stylish \
             --ext .js,.jsx \
             || true
