@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
 
 // TODO: Replace with actual patient ID from useAuth context when available
 // Hardcoded to 230 for testing. 
 export default function BMIForm({ patientId = 230 }) {
+  const navigate = useNavigate();
   const [bmi, setBmi] = useState('');
   const [previousSurgery, setPreviousSurgery] = useState('no');
   const [recommendation, setRecommendation] = useState(null);
+  const [selectedSpecialist, setSelectedSpecialist] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fetchingPatient, setFetchingPatient] = useState(true);
   const [error, setError] = useState(null);
@@ -58,17 +61,24 @@ export default function BMIForm({ patientId = 230 }) {
     }
   };
 
-  const handleChoose = async (specialist) => {
+  const handleChoose = (specialist) => {
+    setSelectedSpecialist(specialist);
+  };
+
+  const submitChoice = async () => {
     setSaveStatus(null);
+    setLoading(true);
     try {
       await apiRequest(`/patients/${patientId}/specialist`, {
         method: 'PATCH',
-        body: JSON.stringify({ specialistChoice: specialist })
+        body: JSON.stringify({ specialistChoice: selectedSpecialist })
       });
 
-      setSaveStatus({ type: 'success', message: `Successfully saved your choice: ${specialist}` });
+      // Redirect to the thank you page after saving
+      navigate(`/thank-you/${patientId}`);
     } catch (err) {
       setSaveStatus({ type: 'error', message: err.message });
+      setLoading(false);
     }
   };
 
@@ -116,8 +126,13 @@ export default function BMIForm({ patientId = 230 }) {
               <p className="text-muted mb-1 fw-semibold">Your Primary Recommendation</p>
               <h3 className="text-primary mb-3">{recommendation.primary}</h3>
               {recommendation.primary !== 'Not eligible' && (
-                <button type="button" className="btn btn-outline-primary" onClick={() => handleChoose(recommendation.primary)}>
-                  Choose {recommendation.primary}
+                <button 
+                  type="button" 
+                  className={`btn ${selectedSpecialist === recommendation.primary ? 'btn-primary' : 'btn-outline-primary'}`} 
+                  onClick={() => handleChoose(recommendation.primary)}
+                >
+                  {selectedSpecialist === recommendation.primary ? 'Selected: ' : 'Choose '} 
+                  {recommendation.primary}
                 </button>
               )}
 
@@ -126,10 +141,28 @@ export default function BMIForm({ patientId = 230 }) {
                   <hr className="my-4 mx-auto" style={{ width: '60%' }} />
                   <p className="text-muted mb-1 fw-semibold">Alternative Option</p>
                   <h5 className="text-secondary mb-3">{recommendation.alternative}</h5>
-                  <button type="button" className="btn btn-outline-secondary" onClick={() => handleChoose(recommendation.alternative)}>
-                    Choose {recommendation.alternative}
+                  <button 
+                    type="button" 
+                    className={`btn ${selectedSpecialist === recommendation.alternative ? 'btn-secondary' : 'btn-outline-secondary'}`} 
+                    onClick={() => handleChoose(recommendation.alternative)}
+                  >
+                    {selectedSpecialist === recommendation.alternative ? 'Selected: ' : 'Choose '} 
+                    {recommendation.alternative}
                   </button>
                 </>
+              )}
+
+              {selectedSpecialist && (
+                <div className="mt-4">
+                  <button 
+                    type="button" 
+                    className="btn btn-success w-100 py-2 fs-5" 
+                    onClick={submitChoice}
+                    disabled={loading}
+                  >
+                    {loading ? 'Submitting...' : 'Submit Choice'}
+                  </button>
+                </div>
               )}
 
               {saveStatus && (
