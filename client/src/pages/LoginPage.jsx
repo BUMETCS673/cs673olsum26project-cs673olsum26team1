@@ -1,3 +1,11 @@
+// AI-USAGE SUMMARY
+// Tools: ChatGPT
+// Overall AI Contribution: ~25%
+// AI-Assisted Areas: Initial component structure and routing suggestions
+// Human Contributions: UI integration, debugging, Firebase integration, styling adjustments, and testing
+// Notes: Code was adapted to fit BariatricPath authentication and routing requirements.
+
+
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Form, Button, Spinner } from 'react-bootstrap';
