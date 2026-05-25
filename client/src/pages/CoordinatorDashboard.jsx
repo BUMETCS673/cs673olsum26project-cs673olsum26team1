@@ -1,13 +1,14 @@
 import Navbar from '../components/Navbar';
+import SearchBar from '../components/SearchBar';
 
-const CoordinatorDashboard = () => {
-  return (
-    <>
-      <Navbar />
-      <div className="container mt-4">
-        <h2>Coordinator portal</h2>
-      </div>
-    </>
-  );
-}
+const CoordinatorDashboard = () => (
+  <>
+    <Navbar />
+    <div className="container mt-4">
+      <h2>Coordinator Portal</h2>
+      <SearchBar />
+    </div>
+  </>
+);
+
 export default CoordinatorDashboard;
