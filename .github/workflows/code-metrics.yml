@@ -46,13 +46,11 @@
   
         - name: Cyclomatic complexity (ESLint)
           run: |
-            cd client && npm ci --silent
-            cd ..
-            echo "===== Cyclomatic Complexity Report ====="
-            npx eslint client/src/ --format stylish || true
+            cd client && npm ci --silent && echo "===== Cyclomatic Complexity Report =====" && npx eslint src/ --format stylish || true
   
         - uses: actions/upload-artifact@v4
           if: always()
           with:
             name: code-metrics
             path: cloc-report.json
+            
