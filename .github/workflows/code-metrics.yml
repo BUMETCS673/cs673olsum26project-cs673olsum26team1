@@ -23,21 +23,27 @@ jobs:
       # ── 1. Lines of code ──────────────────────────────
       - name: Count lines of code (cloc)
         run: |
+          sudo apt-get update
           sudo apt-get install -y cloc
+
           cloc client/src/ \
             --exclude-dir=node_modules,dist,coverage \
             --json --out=cloc-report.json
+
           echo "=== LOC SUMMARY ==="
+
           python3 << 'EOF'
           import json
+
           with open('cloc-report.json') as f:
               data = json.load(f)
+
           t = data.get('SUM', {})
+
           print('Files   :', t.get('nFiles', 0))
           print('Code    :', t.get('code', 0))
           print('Comment :', t.get('comment', 0))
           EOF
-                    "
 
       # ── 2. File / class / method count ────────────────
       - name: Count symbols (babel)
