@@ -1,90 +1,42 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+// AI-USAGE SUMMARY
+// Tools: Claude Code (review fixes applied by team lead)
+// Overall AI Contribution: ~50%
+// AI-Assisted Areas: Initial component structure and layout
+// Human Contributions: Removed unused useNavigate import, removed dead style objects,
+//   converted inline styles to Bootstrap classes
+
+import { useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
 function BmiIneligible() {
   const location = useLocation();
-  const navigate = useNavigate();
-
-  const user = location.state; // data passed from BMI page
+  const user = location.state;
 
   return (
     <>
       <Navbar />
-
-      <div style={styles.container}>
-        <div style={styles.card}>
-          <h2 style={styles.title}>BMI Not Eligible</h2>
+      <div className="container mt-5 d-flex justify-content-center">
+        <div className="card p-4 text-center" style={{ maxWidth: 400 }}>
+          <h2 className="mb-3">BMI Not Eligible</h2>
 
           {user?.bmi && (
-            <p style={styles.bmiText}>
+            <p className="fs-5 mb-2">
               Your BMI: <strong>{user.bmi}</strong>
             </p>
           )}
 
-          <p style={styles.message}>
+          <p className="mb-2">
             Based on your BMI, you are currently not eligible for the program.
           </p>
 
-          <p style={styles.subMessage}>
+          <p className="text-muted" style={{ fontSize: 14 }}>
             Please consult a healthcare provider for next steps or consider
             lifestyle changes and try again later.
           </p>
-
         </div>
       </div>
     </>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '80vh',
-    padding: 20,
-  },
-  card: {
-    maxWidth: 400,
-    padding: 25,
-    border: '1px solid #ddd',
-    borderRadius: 10,
-    textAlign: 'center',
-  },
-  title: {
-    marginBottom: 15,
-  },
-  bmiText: {
-    fontSize: 18,
-    marginBottom: 10,
-  },
-  message: {
-    marginBottom: 10,
-  },
-  subMessage: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
-  },
-  button: {
-    padding: 10,
-    width: '100%',
-    marginBottom: 10,
-    backgroundColor: '#d9534f',
-    color: 'white',
-    border: 'none',
-    borderRadius: 5,
-    cursor: 'pointer',
-  },
-  secondaryButton: {
-    padding: 10,
-    width: '100%',
-    backgroundColor: '#6c757d',
-    color: 'white',
-    border: 'none',
-    borderRadius: 5,
-    cursor: 'pointer',
-  },
-};
 
 export default BmiIneligible;

@@ -68,7 +68,7 @@ function RegisterPage() {
           role: user.role,
         },
       });
-        } catch (err) {
+    } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
         showError('An account with this email already exists. Try logging in.');
       } else if (err.code === 'auth/invalid-email') {
