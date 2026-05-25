@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import Navbar from '../components/Navbar';
+import { calculateBMI } from "../utils/bmi";
 
 
 function BMICalculationPage() {
@@ -17,7 +18,7 @@ function BMICalculationPage() {
 
     const heightInches = Number(height);
     const weightPounds = Number(weight)
-    const bmi = (weightPounds *703)/(heightInches * heightInches); 
+    const bmi = calculateBMI(heightInches, weightPounds);
 
     alert(`Your BMI is ${bmi.toFixed(1)}`);
 
