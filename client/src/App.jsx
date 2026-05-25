@@ -10,6 +10,8 @@ import BMICalculationPage from './pages/BMICalculationPage';
 import BmiIneligiblePage from './pages/BmiIneligiblePage';
 import LoginPage from './pages/LoginPage';
 import PatientPortal from './pages/PatientPortal';
+import BMIForm from './pages/BMIForm';
+import ThankYouPage from './pages/ThankYouPage';
 import CoordinatorDashboard from './pages/CoordinatorDashboard';
 import DirectorDashboard from './pages/DirectorDashboard';
 
@@ -27,6 +29,22 @@ function App() {
           <Route path="/bmi-ineligible" element={<BmiIneligiblePage />} />
 
           {/* Protected routes — one canonical path each */}
+          <Route
+            path="/bmi"
+            element={
+              <ProtectedRoute allowedRoles={['PATIENT']}>
+                <BMIForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/thank-you/:id"
+            element={
+              <ProtectedRoute allowedRoles={['PATIENT']}>
+                <ThankYouPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/patient/portal"
             element={

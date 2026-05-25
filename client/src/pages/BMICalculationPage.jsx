@@ -12,6 +12,7 @@ import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { calculateBMI } from '../utils/bmi';
 import { showError } from '../utils/toast';
+import { apiRequest } from '../utils/api';
 
 function BMICalculationPage() {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ function BMICalculationPage() {
 
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
+  const [bmiResult, setBmiResult] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -33,13 +35,25 @@ function BMICalculationPage() {
       return;
     }
 
-    // TODO: save BMI to the Patient record via POST /api/patients once
-    // the backend endpoint is implemented and User→Patient link exists.
+    setBmiResult(bmi.toFixed(1));
+  };
 
-    if (bmi >= 27) {
-      navigate('/patient/portal', { state: { ...user, bmi: bmi.toFixed(1) } });
+  const handleContinue = async () => {
+    if (user?.patientId) {
+      try {
+        await apiRequest(`/patients/${user.patientId}/bmi`, {
+          method: 'PATCH',
+          body: JSON.stringify({ bmi: Number(bmiResult) }),
+        });
+      } catch {
+        showError('Failed to save BMI. Please try again.');
+        return;
+      }
+    }
+    if (Number(bmiResult) >= 27) {
+      navigate('/bmi', { state: { bmi: bmiResult } });
     } else {
-      navigate('/bmi-ineligible', { state: { ...user, bmi: bmi.toFixed(1) } });
+      navigate('/bmi-ineligible', { state: { ...user, bmi: bmiResult } });
     }
   };
 
@@ -81,6 +95,19 @@ function BMICalculationPage() {
             Calculate BMI
           </button>
         </form>
+
+        {bmiResult && (
+          <div className="mt-4 p-3 border rounded text-center">
+            <p className="mb-1 text-muted">Your BMI</p>
+            <h3 className="mb-1">{bmiResult}</h3>
+            <p className="mb-3 text-muted" style={{ fontSize: 14 }}>
+              {Number(bmiResult) >= 27 ? 'You may be eligible for the program.' : 'You may not be eligible for the program.'}
+            </p>
+            <button className="btn btn-success w-100" onClick={handleContinue}>
+              Continue
+            </button>
+          </div>
+        )}
       </div>
     </>
   );
