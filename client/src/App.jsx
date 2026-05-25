@@ -23,8 +23,15 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* Temporary route for manual testing of BMIForm */}
-          <Route path="/bmi" element={<BMIForm />} />
+          {/* Protected route for BMIForm */}
+          <Route
+            path="/bmi"
+            element={
+              <ProtectedRoute allowedRoles={['PATIENT']}>
+                <BMIForm />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Protected routes — one canonical path each */}
           <Route

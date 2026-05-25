@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+import { apiRequest } from '../utils/api';
 
 // TODO: Replace with actual patient ID from useAuth context when available
 // Hardcoded to 230 for testing. 
@@ -16,13 +16,8 @@ export default function BMIForm({ patientId = 230 }) {
     const fetchPatientData = async () => {
       setError(null);
       try {
-        const response = await fetch(`http://127.0.0.1:5001/api/patients/${patientId}`);
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to load patient data');
-        }
-
-        const patientData = await response.json();
+        const patientData = await apiRequest(`/patients/${patientId}`);
+        
         if (patientData.bmi) {
           setBmi(patientData.bmi);
         }
@@ -47,21 +42,14 @@ export default function BMIForm({ patientId = 230 }) {
     setSaveStatus(null);
 
     try {
-      // Using 127.0.0.1 instead of localhost to bypass common IPv6 resolution bugs
-      const response = await fetch('http://127.0.0.1:5001/api/patients/recommendation', {
+      const data = await apiRequest('/patients/recommendation', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           bmi: parseFloat(bmi),
           previousSurgery
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get recommendation');
-      }
-
-      const data = await response.json();
       setRecommendation(data);
     } catch (err) {
       setError(err.message);
@@ -73,15 +61,10 @@ export default function BMIForm({ patientId = 230 }) {
   const handleChoose = async (specialist) => {
     setSaveStatus(null);
     try {
-      const response = await fetch(`http://127.0.0.1:5001/api/patients/${patientId}/specialist`, {
+      await apiRequest(`/patients/${patientId}/specialist`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ specialistChoice: specialist })
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to save choice');
-      }
 
       setSaveStatus({ type: 'success', message: `Successfully saved your choice: ${specialist}` });
     } catch (err) {

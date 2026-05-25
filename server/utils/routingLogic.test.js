@@ -56,4 +56,28 @@ describe('getSpecialistRecommendation', () => {
       alternative: 'Obesity medicine specialist'
     });
   });
+
+  test('boundary: exactly BMI 27', () => {
+    const result = getSpecialistRecommendation(27, 'no');
+    expect(result).toEqual({
+      primary: 'Obesity medicine specialist',
+      alternative: 'Endoscopic obesity specialist'
+    });
+  });
+
+  test('boundary: exactly BMI 35', () => {
+    const result = getSpecialistRecommendation(35, 'no');
+    expect(result).toEqual({
+      primary: 'Bariatric surgeon',
+      alternative: 'Endoscopic obesity specialist'
+    });
+  });
+
+  test('boundary: upper BMI 40', () => {
+    const result = getSpecialistRecommendation(40, 'no');
+    expect(result).toEqual({
+      primary: 'Bariatric surgeon',
+      alternative: 'Endoscopic obesity specialist'
+    });
+  });
 });

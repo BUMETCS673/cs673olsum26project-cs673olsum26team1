@@ -13,6 +13,24 @@ router.get('/', async (req, res) => {
   }
 });
 
+// POST /api/patients/recommendation
+// Calculate specialist recommendation
+router.post('/recommendation', async (req, res) => {
+  try {
+    const { bmi, previousSurgery } = req.body;
+    const { getSpecialistRecommendation } = require('../utils/routingLogic');
+    
+    if (bmi === undefined) {
+      return res.status(400).json({ error: 'BMI is required' });
+    }
+
+    const recommendation = getSpecialistRecommendation(bmi, previousSurgery);
+    res.json(recommendation);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // GET /api/patients/:id
 // Get one patient by ID
 router.get('/:id', async (req, res) => {
@@ -65,24 +83,6 @@ router.patch('/:id/clinical', async (req, res) => {
   }
 });
 
-// POST /api/patients/recommendation
-// Calculate specialist recommendation
-router.post('/recommendation', async (req, res) => {
-  try {
-    const { bmi, previousSurgery } = req.body;
-    const { getSpecialistRecommendation } = require('../utils/routingLogic');
-    
-    if (bmi === undefined) {
-      return res.status(400).json({ error: 'BMI is required' });
-    }
-
-    const recommendation = getSpecialistRecommendation(bmi, previousSurgery);
-    res.json(recommendation);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // PATCH /api/patients/:id/specialist
 // Save patient specialist choice
 router.patch('/:id/specialist', async (req, res) => {
@@ -94,9 +94,26 @@ router.patch('/:id/specialist', async (req, res) => {
       return res.status(400).json({ error: 'specialistChoice is required' });
     }
     
+    const existingPatient = await prisma.patient.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!existingPatient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
     const updatedPatient = await prisma.patient.update({
       where: { id: parseInt(id) },
       data: { visitType: specialistChoice }
+    });
+    
+    await prisma.auditLog.create({
+      data: {
+        patientId: parseInt(id),
+        column: 'visitType',
+        oldValue: existingPatient.visitType || '',
+        newValue: specialistChoice,
+      }
     });
     
     res.json({ message: 'Specialist choice saved successfully', patient: updatedPatient });
