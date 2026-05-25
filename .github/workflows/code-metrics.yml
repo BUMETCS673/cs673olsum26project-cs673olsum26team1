@@ -43,7 +43,8 @@ jobs:
 
       - name: Cyclomatic complexity (ESLint)
         run: |
-          npx eslint client/src/ \
+          cd client && npm install --no-save
+          npx eslint src/ \
             --rule '{"complexity":["warn",{"max":10}]}' \
             --format stylish \
             --ext .js,.jsx \
