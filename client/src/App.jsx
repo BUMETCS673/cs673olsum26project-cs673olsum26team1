@@ -23,9 +23,7 @@ function App() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/bmi-calculation" element={<BMICalculationPage />} />
-          <Route path="/bmi-ineligible" element={<BmiIneligiblePage />} />
-
+          
           {/* Protected routes — one canonical path each */}
           <Route
             path="/patient/portal"
@@ -48,6 +46,22 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['PROGRAM_DIRECTOR']}>
                 <DirectorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bmi-calculation"
+            element={
+              <ProtectedRoute allowedRoles={['PATIENT']}>
+                <BMICalculationPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bmi-ineligible"
+            element={
+              <ProtectedRoute allowedRoles={['PATIENT']}>
+                <BmiIneligiblePage />
               </ProtectedRoute>
             }
           />
