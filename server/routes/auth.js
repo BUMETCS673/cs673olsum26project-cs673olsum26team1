@@ -12,11 +12,15 @@ const router = express.Router();
 router.post(
   '/register',
   [
-    
     body('name')
       .trim()
       .isLength({ min: 2, max: 100 })
       .withMessage('Name must be 2-100 characters'),
+    body('dateOfBirth')
+      .notEmpty()
+      .withMessage('Date of birth is required')
+      .isISO8601()
+      .withMessage('Date of birth must be a valid date (YYYY-MM-DD)'),
     body('idToken')
       .notEmpty()
       .withMessage('Firebase ID token is required'),
@@ -27,7 +31,7 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, idToken } = req.body;
+    const { name, dateOfBirth, idToken } = req.body;
 
     try {
       const decodedToken = await admin.auth().verifyIdToken(idToken);
@@ -38,28 +42,37 @@ router.post(
       });
 
       if (existingUser) {
-        return res.status(409).json({
-          error: 'User already registered',
-        });
+        return res.status(409).json({ error: 'User already registered' });
       }
+
       const newUser = await prisma.user.create({
+        data: { firebaseUid, name, email, role: 'PATIENT' },
+      });
+
+      const mrn = `MRN${String(newUser.id).padStart(6, '0')}`;
+      const newPatient = await prisma.patient.create({
         data: {
-          firebaseUid,
+          userId: newUser.id,
+          mrn,
           name,
-          email,
-          role: 'PATIENT',
+          dateOfBirth: new Date(dateOfBirth),
+          bmi: 0,
         },
       });
+
       await prisma.auditLog.create({
         data: {
           userId: newUser.id,
+          patientId: newPatient.id,
           column: 'user.created',
           oldValue: '',
           newValue: `User ${email} registered as PATIENT`,
         },
       });
-       return res.status(201).json({
+
+      return res.status(201).json({
         id: newUser.id,
+        patientId: newPatient.id,
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
@@ -67,14 +80,12 @@ router.post(
       });
     } catch (error) {
       console.error('Registration error:', error);
-
       if (error.code === 'auth/id-token-expired') {
         return res.status(401).json({ error: 'Token expired, please try again' });
       }
       if (error.code === 'auth/invalid-id-token') {
         return res.status(401).json({ error: 'Invalid token' });
       }
-
       return res.status(500).json({ error: 'Registration failed' });
     }
   }
@@ -153,12 +164,22 @@ router.post(
 // Get current user role
 router.get('/me', verifyAuth, async (req, res) => {
   try {
-    return res.status(200).json({
+    const responseData = {
       id: req.user.id,
       name: req.user.name,
       email: req.user.email,
       role: req.user.role,
-    });
+    };
+
+    if (req.user.role === 'PATIENT') {
+      const patient = await prisma.patient.findUnique({
+        where: { userId: req.user.id },
+        select: { id: true },
+      });
+      if (patient) responseData.patientId = patient.id;
+    }
+
+    return res.status(200).json(responseData);
   } catch (error) {
     console.error('Me route error:', error);
     return res.status(500).json({ error: 'Failed to load user' });

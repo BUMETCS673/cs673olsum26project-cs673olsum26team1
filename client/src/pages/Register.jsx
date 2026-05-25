@@ -16,7 +16,7 @@ import '../styles/auth.css';
 
 function RegisterPage() {
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', confirmPassword: '',
+    name: '', email: '', password: '', confirmPassword: '', dateOfBirth: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -33,6 +33,10 @@ function RegisterPage() {
 
     if (formData.name.trim().length < 2) {
       showError('Please enter your full name');
+      return;
+    }
+    if (!formData.dateOfBirth) {
+      showError('Please enter your date of birth');
       return;
     }
     if (formData.password.length < 8) {
@@ -55,7 +59,7 @@ function RegisterPage() {
       // 3. Create the DB record via our backend
       const user = await apiRequest('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ name: formData.name, idToken }),
+        body: JSON.stringify({ name: formData.name, dateOfBirth: formData.dateOfBirth, idToken }),
       });
 
       await refreshUser();
@@ -136,6 +140,15 @@ function RegisterPage() {
               type="text" name="name" value={formData.name}
               onChange={handleChange} required disabled={loading}
               placeholder="Jane Doe"
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <label className="auth-form-label">Date of Birth</label>
+            <Form.Control
+              type="date" name="dateOfBirth" value={formData.dateOfBirth}
+              onChange={handleChange} required disabled={loading}
+              max={new Date().toISOString().split('T')[0]}
             />
           </Form.Group>
 

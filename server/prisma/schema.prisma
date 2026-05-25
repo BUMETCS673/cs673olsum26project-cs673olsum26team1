@@ -26,14 +26,17 @@ model User {
   role        Role
   createdAt   DateTime   @default(now())
   auditLogs   AuditLog[]
+  patient     Patient?
 }
 
 model Patient {
   id            Int            @id @default(autoincrement())
+  userId        Int?           @unique
   mrn           String         @unique
   name          String
   dateOfBirth   DateTime
-  bmi           Float
+  bmi           Float          @default(0)
+  user          User?          @relation(fields: [userId], references: [id])
   visitType     String         @default("")
   insurance     String         @default("not clear")
   consult       String         @default("not booked")
