@@ -1,4 +1,4 @@
-# Bariatic Path
+# Bariatric Path
 ## Overview
 A web-based clinical workflow platform that digitizes and centralizes the bariatric surgery evaluation process. The system replaces fragmented tools like spreadsheets, phone calls, and paper checklists with a unified platform for patients, coordinators, and program directors.
 
