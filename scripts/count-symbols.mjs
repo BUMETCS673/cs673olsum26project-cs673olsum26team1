@@ -6,7 +6,7 @@ import { join, extname } from "path";
 import { parse } from "@babel/parser";
 import { walk } from "estree-walker";
 
-const SOURCE_DIR = "./client/src"; // change if your source lives elsewhere
+const SOURCE_DIR = "./client/src";
 
 let files = 0, classes = 0, functions = 0, methods = 0;
 

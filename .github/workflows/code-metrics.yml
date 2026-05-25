@@ -20,38 +20,27 @@ jobs:
 
       - run: npm ci
 
-      # ── 1. Lines of code ──────────────────────────────
       - name: Count lines of code (cloc)
         run: |
-          sudo apt-get update
           sudo apt-get install -y cloc
-
           cloc client/src/ \
             --exclude-dir=node_modules,dist,coverage \
             --json --out=cloc-report.json
-
           echo "=== LOC SUMMARY ==="
+          echo "import json" > parse_cloc.py
+          echo "with open('cloc-report.json') as f:" >> parse_cloc.py
+          echo "    data = json.load(f)" >> parse_cloc.py
+          echo "t = data.get('SUM', {})" >> parse_cloc.py
+          echo "print('Files   :', t.get('nFiles', 0))" >> parse_cloc.py
+          echo "print('Code    :', t.get('code', 0))" >> parse_cloc.py
+          echo "print('Comment :', t.get('comment', 0))" >> parse_cloc.py
+          python3 parse_cloc.py
 
-          python3 << 'EOF'
-          import json
-
-          with open('cloc-report.json') as f:
-              data = json.load(f)
-
-          t = data.get('SUM', {})
-
-          print('Files   :', t.get('nFiles', 0))
-          print('Code    :', t.get('code', 0))
-          print('Comment :', t.get('comment', 0))
-          EOF
-
-      # ── 2. File / class / method count ────────────────
       - name: Count symbols (babel)
         run: |
           npm install @babel/parser estree-walker --no-save
           node scripts/count-symbols.mjs
 
-      # ── 3. Cyclomatic complexity ───────────────────────
       - name: Cyclomatic complexity (ESLint)
         run: |
           npx eslint client/src/ \
@@ -60,10 +49,8 @@ jobs:
             --ext .js,.jsx \
             || true
 
-      # ── Upload reports ─────────────────────────────────
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: code-metrics
           path: cloc-report.json
-          
