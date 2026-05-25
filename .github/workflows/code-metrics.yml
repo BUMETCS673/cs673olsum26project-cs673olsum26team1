@@ -1,0 +1,21 @@
+#AI Usage log:
+# Tool: ChatGPT 
+# All code is AI generated and human verified
+- name: Count lines of code
+  run: |
+    sudo apt-get install -y cloc
+    cloc client/src/ \
+      --exclude-dir=node_modules,dist,coverage \
+      --json \
+      --out=cloc-report.json
+    echo "=== LOC SUMMARY ==="
+    cat cloc-report.json | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+total = data.get('SUM', {})
+print(f\"Files   : {total.get('nFiles', 0)}\")
+print(f\"Blank   : {total.get('blank', 0)}\")
+print(f\"Comment : {total.get('comment', 0)}\")
+print(f\"Code    : {total.get('code', 0)}\")
+    "
+    
