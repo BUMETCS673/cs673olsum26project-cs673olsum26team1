@@ -28,13 +28,15 @@ jobs:
             --exclude-dir=node_modules,dist,coverage \
             --json --out=cloc-report.json
           echo "=== LOC SUMMARY ==="
-          cat cloc-report.json | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
+          python3 << 'EOF'
+import json
+with open('cloc-report.json') as f:
+    data = json.load(f)
 t = data.get('SUM', {})
-print(f\"Files   : {t.get('nFiles',0)}\")
-print(f\"Code    : {t.get('code',0)}\")
-print(f\"Comment : {t.get('comment',0)}\")
+print('Files   :', t.get('nFiles', 0))
+print('Code    :', t.get('code', 0))
+print('Comment :', t.get('comment', 0))
+EOF
           "
 
       # ── 2. File / class / method count ────────────────
