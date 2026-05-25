@@ -1,3 +1,9 @@
+// AI-USAGE SUMMARY
+// Tools: ChatGPT-4, Claude
+// OVerall AI contribution: ~50%
+// AI Assisted areas: styles section and fixing code formatting
+// Human input: created the code structure and logic for the page and what the messages should say, debugging AI input code
+
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 

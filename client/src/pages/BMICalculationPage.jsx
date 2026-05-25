@@ -1,3 +1,12 @@
+// AI-USAGE SUMMARY
+// Tools: ChatGPT-4, Claude
+// OVerall AI contribution: ~70%
+// AI Assisted areas: filling out all the code needed from human made bare code, including form handling, validation, and navigation logic. 
+// Human input: Initial code structure, debugging, testing, and final verification.
+
+
+
+
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import Navbar from '../components/Navbar';
