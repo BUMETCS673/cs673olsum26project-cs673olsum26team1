@@ -24,7 +24,7 @@ function BMICalculationPage() {
     // later: save to backend here
 
     
-    if (bmi > 27) {
+    if (bmi >= 27) {
       navigate('/patient/portal', {
         state: {
           ...user,
