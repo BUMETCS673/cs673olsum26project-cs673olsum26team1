@@ -5,7 +5,7 @@ name: Code metrics
 
 on:
   push:
-    branches: [metrics/ci-tracking]
+    branches: [metrics/kai-ci-tracking]
 
 jobs:
   metrics:
