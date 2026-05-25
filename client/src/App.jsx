@@ -22,7 +22,15 @@ function App() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/thank-you/:id" element={<ThankYouPage />} />
+          {/* Protected route for ThankYouPage */}
+          <Route
+            path="/thank-you/:id"
+            element={
+              <ProtectedRoute allowedRoles={['PATIENT']}>
+                <ThankYouPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Protected routes — one canonical path each */}
           <Route

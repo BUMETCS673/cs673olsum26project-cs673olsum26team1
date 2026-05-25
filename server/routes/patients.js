@@ -4,6 +4,11 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const nodemailer = require('nodemailer');
 
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+});
+
 // GET /api/patients
 // Get all patients (coordinator and director)
 router.get('/', async (req, res) => {
@@ -81,6 +86,10 @@ router.post('/:id/submit', async (req, res) => {
       return res.status(404).json({ error: 'Patient not found' });
     }
 
+    if (!patient.visitType) {
+      return res.status(400).json({ error: 'Patient must have a recommended specialist before submitting' });
+    }
+
     //Create the notification record for the coordinator
     const notification = await prisma.notification.create({
       data: {
@@ -90,12 +99,12 @@ router.post('/:id/submit', async (req, res) => {
       }
     });
 
-    // Nodemailer Configuration
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+    await prisma.auditLog.create({
+      data: {
+        patientId: patient.id,
+        column: 'status',
+        oldValue: 'pending',
+        newValue: 'submitted',
       }
     });
 
@@ -108,11 +117,15 @@ router.post('/:id/submit', async (req, res) => {
       text: `Hello ${patient.name},\n\nThank you for completing your BariatricPath registration. You are recommended to see a ${patient.visitType}. A program coordinator will call you within 1 to 2 business days to schedule your initial appointment.\n\nThank you!`
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (emailErr) {
+      console.error('Email failed, continuing:', emailErr.message);
+    }
 
     // Send success response back to the React frontend
     res.json({
-      message: 'Profile submitted and email sent successfully',
+      message: 'Profile submitted successfully',
       notification: notification
     });
 

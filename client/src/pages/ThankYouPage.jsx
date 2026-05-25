@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
+import { apiRequest } from '../utils/api';
 
 const ThankYouPage = () => {
   // We assume the route is set up like: <Route path="/thank-you/:id" element={<ThankYouPage />} />
@@ -12,14 +13,7 @@ const ThankYouPage = () => {
   useEffect(() => {
     const fetchPatientData = async () => {
       try {
-        //const response = await fetch(`http://localhost:5001/api/patients/${id}`);
-        const response = await fetch(`http://localhost:5001/api/patients/235`);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch patient data');
-        }
-
-        const data = await response.json();
+        const data = await apiRequest(`/patients/${id}`);
         setPatientData(data);
         setLoading(false);
       } catch (err) {
@@ -63,7 +57,6 @@ const ThankYouPage = () => {
   // For instance, visitType maps to specialist choice, and email might come from an included User relation
   const patientName = patientData.name || '[Patient Name]';
   const specialistName = patientData.visitType || '[Specialist Name/Type]';
-  const patientEmail = patientData.email || patientData.user?.email || '[Patient Email]';
 
   return (
     <div className="container mt-5">
@@ -86,17 +79,13 @@ const ThankYouPage = () => {
               <li className="mb-2">
                 <strong>Specialist Selected:</strong> {specialistName}
               </li>
-              <li>
-                <strong>Your Email:</strong> {patientEmail}
-              </li>
             </ul>
           </div>
 
-          {/* NEW: View Dashboard Button inserted here! */}
           <div className="text-center mt-4">
-            <a href="https://www.bu.edu" className="btn btn-primary px-4 py-2 fw-bold">
+            <Link to="/patient/portal" className="btn btn-primary px-4 py-2 fw-bold">
               View Your Dashboard
-            </a>
+            </Link>
           </div>
 
         </div>
