@@ -1,3 +1,10 @@
+// AI-USAGE SUMMARY
+// Tools: ChatGPT | Claude
+// Overall AI Contribution: ~45%
+// AI-Assisted Areas: Jest/Supertest test scaffolding, Firebase Admin mocking, Prisma mocking, protected route test structure
+// Human Contributions: Selected authentication requirements, verified expected behavior, ran tests locally, fixed project-specific paths and responses
+// Notes: AI-assisted code was reviewed, corrected, and validated locally. All authentication tests passed before integration.
+
 const request = require('supertest');
 
 const mockVerifyIdToken = jest.fn();
