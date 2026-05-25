@@ -26,8 +26,7 @@ function BmiIneligible() {
           </p>
 
           <p style={styles.subMessage}>
-            Please consult a healthcare provider for next steps or consider
-            lifestyle changes and try again later.
+            Please consult a healthcare provider.
           </p>
 
         </div>
