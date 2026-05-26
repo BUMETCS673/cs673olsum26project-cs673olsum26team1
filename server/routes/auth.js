@@ -1,3 +1,10 @@
+// AI-USAGE SUMMARY
+// Tools: ChatGPT
+// Overall AI Contribution: ~25%
+// AI-Assisted Areas: Debugging Google signup flow, patient record creation, Prisma schema mismatch, and auth route review
+// Human Contributions: Business rules, Firebase setup, implementation testing, manual verification, and final integration
+// Notes: AI suggestions were reviewed and adapted to match BariatricPath registration and patient onboarding requirements.
+
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const admin = require('../config/firebase-admin');
@@ -33,6 +40,9 @@ router.post(
 
     const { name, dateOfBirth, idToken } = req.body;
 
+    const patientDateOfBirth = dateOfBirth || '2000-01-01';
+
+
     try {
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       const { uid: firebaseUid, email } = decodedToken;
@@ -55,7 +65,8 @@ router.post(
           userId: newUser.id,
           mrn,
           name,
-          dateOfBirth: new Date(dateOfBirth),
+          // dateOfBirth: new Date(dateOfBirth),
+          dateOfBirth: new Date(patientDateOfBirth),
           bmi: 0,
         },
       });

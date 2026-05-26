@@ -16,12 +16,12 @@ function Navbar() {
       setUser(null);
 
       showSuccess('You have been logged out');
-      navigate('/login');
+      navigate('/login', { replace: true });
     } catch (error) {
       console.error('Logout error:', error);
       showError('Logout failed, redirecting anyway');
       setUser(null);
-      navigate('/login');
+      navigate('/login', { replace: true });
     }
   };
 
@@ -30,8 +30,7 @@ function Navbar() {
       <Container>
         <BSNavbar.Brand
           style={{ cursor: 'pointer' }}
-          onClick={() => navigate('/')}
-        >
+          onClick={() => navigate(user ? '/patient/portal' : '/login')}        >
           <img
             src={logo}
             alt="Bariatric Pathway"
