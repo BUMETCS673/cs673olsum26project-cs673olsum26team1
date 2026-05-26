@@ -47,10 +47,27 @@
         - name: Cyclomatic complexity (ESLint)
           run: |
             cd client && npm ci --silent
-            echo "===== ESLint Config Check ====="
-            cat eslint.config.js
             echo "===== Cyclomatic Complexity Report ====="
-            npx eslint src/ --format stylish || true
+            npx eslint src/ --format json \
+              --rule '{"complexity": ["warn", 1]}' | \
+              node -e "
+                const data = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8'));
+                let total = 0, count = 0, max = 0, maxFn = '';
+                data.forEach(f => f.messages.forEach(m => {
+                  const match = m.message.match(/complexity of (\d+)/);
+                  if (match) {
+                    const cc = parseInt(match[1]);
+                    total += cc;
+                    count++;
+                    if (cc > max) { max = cc; maxFn = f.filePath + ':' + m.line; }
+                  }
+                }));
+                console.log('Functions analyzed : ' + count);
+                console.log('Total CC           : ' + total);
+                console.log('Average CC         : ' + (total/count).toFixed(2));
+                console.log('Highest CC         : ' + max + ' (' + maxFn + ')');
+                console.log('Threshold (warn)   : 10');
+              " || true
   
         - uses: actions/upload-artifact@v4
           if: always()
