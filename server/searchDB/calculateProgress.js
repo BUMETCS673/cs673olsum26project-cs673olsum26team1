@@ -4,6 +4,7 @@
 // AI-Assisted Areas: Initial code generation
 // Human Contributions: Providing the business logic and modularizing the progress calculation logic.
 
+
 const REQUIRED_ITEMS = {
   'Obesity Medicine Specialist': ['insurance', 'labs', 'consult', 'dietitian', 'psychologist'],
   'Endoscopic Obesity Specialist': ['insurance', 'labs', 'consult', 'dietitian', 'psychologist', 'endoscopy', 'cardiology'],
@@ -21,5 +22,6 @@ const computeProgress = (patient) => {
   const completed = required.filter((field) => isItemComplete(field, patient[field])).length;
   return { completed, total };
 };
+
 
 module.exports = { computeProgress };
