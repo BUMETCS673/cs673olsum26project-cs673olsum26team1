@@ -1,9 +1,12 @@
+
 // AI-USAGE SUMMARY
 // Tools: ChatGPT | Claude
 // Overall AI Contribution: ~20%
 // AI-Assisted Areas: Test scaffolding, authentication flow structure, Firebase env handling, protected route logic
 // Human Contributions: Business rules, debugging, project integration, validation, testing, and final verification
 // Notes: AI-generated suggestions were reviewed, modified, and manually tested before integration.
+
+// No AI Contribution
 
 const admin = require('firebase-admin');
 

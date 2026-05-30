@@ -81,10 +81,16 @@ function LoginPage() {
         body: JSON.stringify({ idToken }),
       });
 
+      setUser(user);
+
+      setUser(user);
       showSuccess(`Welcome back, ${user.name}!`);
-      console.log("Logged in user:", user);
-      console.log("Redirecting to:", getRouteForRole(user.role));
-      navigate(getRouteForRole(user.role));
+      
+      if (user.role === 'PATIENT' && !user.profileComplete) {
+        navigate('/bmi-calculation', { replace: true });
+      } else {
+        navigate(getRouteForRole(user.role), { replace: true });
+      }
     } catch (err) {
       showError(err.message || 'Google login failed');
     } finally {
@@ -105,7 +111,7 @@ function LoginPage() {
           <Form.Group className="mb-3">
             <label className="auth-form-label">Email</label>
             <Form.Control
-              type="email" name="email" value={formData.email}
+              type="email" name="email" value={formData.email} autoComplete="new-email"
               onChange={handleChange} required disabled={loading}
               placeholder="jane@example.com"
             />
@@ -117,7 +123,7 @@ function LoginPage() {
               <Form.Control
                 type={showPassword ? 'text' : 'password'}
                 name="password" value={formData.password}
-                onChange={handleChange} required disabled={loading}
+                onChange={handleChange} required disabled={loading} autoComplete="new-password"
                 placeholder="Enter your password"
               />
               <button

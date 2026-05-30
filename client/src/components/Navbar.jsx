@@ -9,6 +9,7 @@ import { Navbar as BSNavbar, Container, Button } from 'react-bootstrap';
 import { auth, signOut } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { showSuccess, showError } from '../utils/toast';
+import logo from '../assets/logo.png';
 
 function Navbar() {
   const navigate = useNavigate();
@@ -21,32 +22,36 @@ function Navbar() {
       setUser(null);
 
       showSuccess('You have been logged out');
-      navigate('/login');
+      navigate('/login', { replace: true });
     } catch (error) {
       console.error('Logout error:', error);
       showError('Logout failed, redirecting anyway');
       setUser(null);
-      navigate('/login');
+      navigate('/login', { replace: true });
     }
   };
 
   return (
-    <BSNavbar bg="primary" variant="dark" expand="lg">
+    <BSNavbar bg="white" variant="light" expand="lg" className="shadow-sm">
       <Container>
         <BSNavbar.Brand
           style={{ cursor: 'pointer' }}
-          onClick={() => navigate('/')}
-        >
-          BariatricPath
+          onClick={() => navigate(user ? '/patient/portal' : '/login')}        >
+          <img
+            src={logo}
+            alt="Bariatric Pathway"
+            height="45"
+            style={{ objectFit: 'contain' }}
+          />
         </BSNavbar.Brand>
 
         <div className="d-flex align-items-center">
           {user && (
             <>
-              <span className="text-white me-3">
+              <span className="text-muted me-3">
                 {user.name || user.email}
               </span>
-              <Button variant="outline-light" size="sm" onClick={handleLogout}>
+              <Button variant="outline-primary" size="sm" onClick={handleLogout}>
                 Sign Out
               </Button>
             </>

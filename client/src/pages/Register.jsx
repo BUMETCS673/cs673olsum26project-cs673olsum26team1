@@ -15,14 +15,13 @@ import {
   googleProvider,
 } from '../config/firebase';
 import { apiRequest } from '../utils/api';
-import { getRouteForRole } from '../utils/roleRedirect';
 import { showSuccess, showError } from '../utils/toast';
 import GoogleButton from '../components/GoogleButton';
 import '../styles/auth.css';
 
 function RegisterPage() {
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', confirmPassword: '',
+    name: '', email: '', password: '', confirmPassword: '', dateOfBirth: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -39,6 +38,10 @@ function RegisterPage() {
 
     if (formData.name.trim().length < 2) {
       showError('Please enter your full name');
+      return;
+    }
+    if (!formData.dateOfBirth) {
+      showError('Please enter your date of birth');
       return;
     }
     if (formData.password.length < 8) {
@@ -61,12 +64,19 @@ function RegisterPage() {
       // 3. Create the DB record via our backend
       const user = await apiRequest('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ name: formData.name, idToken }),
+        body: JSON.stringify({ name: formData.name, dateOfBirth: formData.dateOfBirth, idToken }),
       });
 
       await refreshUser();
       showSuccess(`Welcome, ${user.name}! Your account is ready.`);
-      navigate(getRouteForRole(user.role));
+      navigate('/bmi-calculation', {
+        state: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      });
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
         showError('An account with this email already exists. Try logging in.');
@@ -95,6 +105,7 @@ function RegisterPage() {
           method: 'POST',
           body: JSON.stringify({
             name: result.user.displayName || 'New Patient',
+            dateOfBirth: formData.dateOfBirth || '2000-01-01',
             idToken,
           }),
         });
@@ -110,8 +121,18 @@ function RegisterPage() {
       }
       
       await refreshUser();
-      showSuccess(`Welcome, ${user.name}!`);
-      navigate(getRouteForRole(user.role));
+      // showSuccess(`Welcome, ${user.name}!`);
+      // navigate(getRouteForRole(user.role));
+      showSuccess(`Welcome, ${user.name}! Please complete your BMI information.`);
+
+      navigate('/bmi-calculation', {
+        state: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      });
     } catch (err) {
       showError(err.message || 'Google sign-up failed');
     } finally {
@@ -128,20 +149,29 @@ function RegisterPage() {
         <h1 className="auth-title">Create your account</h1>
         <p className="auth-subtitle">Start tracking your bariatric care journey</p>
 
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit} autoComplete='off'>
           <Form.Group className="mb-3">
             <label className="auth-form-label">Full Name</label>
             <Form.Control
-              type="text" name="name" value={formData.name}
+              type="text" name="name" value={formData.name} autoComplete='off'
               onChange={handleChange} required disabled={loading}
               placeholder="Jane Doe"
             />
           </Form.Group>
 
           <Form.Group className="mb-3">
+            <label className="auth-form-label">Date of Birth</label>
+            <Form.Control
+              type="date" name="dateOfBirth" value={formData.dateOfBirth} autoComplete='off'
+              onChange={handleChange} required disabled={loading}
+              max={new Date().toISOString().split('T')[0]}
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3">
             <label className="auth-form-label">Email</label>
             <Form.Control
-              type="email" name="email" value={formData.email}
+              type="email" name="email" value={formData.email} autoComplete="new-email"
               onChange={handleChange} required disabled={loading}
               placeholder="jane@example.com"
             />
@@ -152,7 +182,7 @@ function RegisterPage() {
             <div className="password-field">
               <Form.Control
                 type={showPassword ? 'text' : 'password'}
-                name="password" value={formData.password}
+                name="password" value={formData.password} autoComplete="new-password"
                 onChange={handleChange} required disabled={loading}
                 placeholder="At least 8 characters" minLength={8}
               />
@@ -172,7 +202,7 @@ function RegisterPage() {
             <div className="password-field">
               <Form.Control
                 type={showPassword ? 'text' : 'password'}
-                name="confirmPassword" value={formData.confirmPassword}
+                name="confirmPassword" value={formData.confirmPassword} autoComplete="new-password"
                 onChange={handleChange} required disabled={loading}
                 placeholder="Re-enter your password"
               />
