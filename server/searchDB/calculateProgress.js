@@ -16,7 +16,10 @@ const isItemComplete = (field, value) => {
 };
 
 const computeProgress = (patient) => {
-  const required = REQUIRED_ITEMS[patient.visitType] || [];
+  const matchedKey = Object.keys(REQUIRED_ITEMS).find(
+    (key) => key.toLowerCase() === patient.visitType?.toLowerCase()
+  );
+  const required = REQUIRED_ITEMS[matchedKey] || [];
   const total = required.length;
   const completed = required.filter((field) => isItemComplete(field, patient[field])).length;
   return { completed, total };
