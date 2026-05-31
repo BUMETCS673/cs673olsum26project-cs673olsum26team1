@@ -10,14 +10,24 @@ const express = require('express');
 
 // Mock the shared prisma instance used by our patients.js
 const mockFindMany = jest.fn();
+const mockFindUnique = jest.fn();
+const mockUpdate = jest.fn();
+const mockAuditLogCreate = jest.fn();
+const mockNotificationCreate = jest.fn();
 
 jest.mock('../config/prisma', () => ({
-  patient: { findMany: mockFindMany },
+  patient: { findMany: mockFindMany, findUnique: mockFindUnique, update: mockUpdate },
+  auditLog: { create: mockAuditLogCreate },
+  notification: { create: mockNotificationCreate },
 }));
 
 // Bypass auth so tests focus on route/search logic, not Firebase
+// Attaches a mock coordinator user so routes that read req.user work correctly
 jest.mock('../middleware/verifyAuth', () => ({
-  verifyAuth: (req, res, next) => next(),
+  verifyAuth: (req, res, next) => {
+    req.user = { id: 10, name: 'Test Coordinator', email: 'coord@test.com', role: 'COORDINATOR' };
+    next();
+  },
   requireRole: () => (req, res, next) => next(),
 }));
 
@@ -188,6 +198,307 @@ describe('GET /api/patients', () => {
       expect(whereClause.visitType).toBe('Endoscopic Obesity Specialist');
       expect(whereClause.insurance).toBe('self pay');
       expect(whereClause.OR.some((c) => c.name?.contains === 'Jane')).toBe(true);
+    });
+  });
+});
+
+describe('GET /api/patients/:id', () => {
+  beforeEach(() => {
+    mockFindUnique.mockReset();
+  });
+
+  describe('response format', () => {
+    test('returns 200 with patient data when patient exists', async () => {
+      mockFindUnique.mockResolvedValue(makePatient());
+      const res = await request(app).get('/api/patients/1');
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('id', 1);
+      expect(res.body).toHaveProperty('mrn', 'MRN001');
+      expect(res.body).toHaveProperty('name', 'Test Patient');
+    });
+
+    test('response includes progress field with completed and total', async () => {
+      mockFindUnique.mockResolvedValue(makePatient());
+      const res = await request(app).get('/api/patients/1');
+      expect(res.body).toHaveProperty('progress');
+      expect(typeof res.body.progress.completed).toBe('number');
+      expect(typeof res.body.progress.total).toBe('number');
+    });
+
+    test('progress is computed correctly for the returned patient', async () => {
+      mockFindUnique.mockResolvedValue(makePatient({ insurance: 'clear', labs: 'complete' }));
+      const res = await request(app).get('/api/patients/1');
+      expect(res.body.progress).toEqual({ completed: 2, total: 5 });
+    });
+
+    test('queries prisma with the correct integer id from the URL', async () => {
+      mockFindUnique.mockResolvedValue(makePatient({ id: 42 }));
+      await request(app).get('/api/patients/42');
+      expect(mockFindUnique).toHaveBeenCalledWith({ where: { id: 42 } });
+    });
+  });
+
+  describe('error handling', () => {
+    test('returns 404 when patient does not exist', async () => {
+      mockFindUnique.mockResolvedValue(null);
+      const res = await request(app).get('/api/patients/999');
+      expect(res.status).toBe(404);
+      expect(res.body).toHaveProperty('error', 'Patient not found');
+    });
+
+    test('returns 500 when the database throws', async () => {
+      mockFindUnique.mockRejectedValue(new Error('Connection refused'));
+      const res = await request(app).get('/api/patients/1');
+      expect(res.status).toBe(500);
+      expect(res.body).toHaveProperty('error');
+    });
+  });
+});
+
+describe('PATCH /api/patients/:id/insurance', () => {
+  beforeEach(() => {
+    mockFindUnique.mockReset();
+    mockUpdate.mockReset();
+    mockAuditLogCreate.mockReset();
+    mockNotificationCreate.mockReset();
+  });
+
+  describe('successful update', () => {
+    test('returns 200 with updated patient when insurance is valid', async () => {
+      mockFindUnique.mockResolvedValue(makePatient({ insurance: 'not clear' }));
+      mockUpdate.mockResolvedValue(makePatient({ insurance: 'clear' }));
+      mockAuditLogCreate.mockResolvedValue({});
+      mockNotificationCreate.mockResolvedValue({});
+
+      const res = await request(app).patch('/api/patients/1/insurance').send({ insurance: 'clear' });
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('insurance', 'clear');
+    });
+
+    test('response includes progress field', async () => {
+      mockFindUnique.mockResolvedValue(makePatient({ insurance: 'not clear' }));
+      mockUpdate.mockResolvedValue(makePatient({ insurance: 'clear' }));
+      mockAuditLogCreate.mockResolvedValue({});
+      mockNotificationCreate.mockResolvedValue({});
+
+      const res = await request(app).patch('/api/patients/1/insurance').send({ insurance: 'clear' });
+      expect(res.body).toHaveProperty('progress');
+      expect(typeof res.body.progress.completed).toBe('number');
+      expect(typeof res.body.progress.total).toBe('number');
+    });
+
+    test('accepts all three valid insurance values', async () => {
+      for (const value of ['clear', 'not clear', 'self pay']) {
+        mockFindUnique.mockResolvedValue(makePatient());
+        mockUpdate.mockResolvedValue(makePatient({ insurance: value }));
+        mockAuditLogCreate.mockResolvedValue({});
+        mockNotificationCreate.mockResolvedValue({});
+
+        const res = await request(app).patch('/api/patients/1/insurance').send({ insurance: value });
+        expect(res.status).toBe(200);
+      }
+    });
+  });
+
+  describe('audit log', () => {
+    test('creates an audit log with old value, new value, patientId, and userId', async () => {
+      mockFindUnique.mockResolvedValue(makePatient({ insurance: 'not clear' }));
+      mockUpdate.mockResolvedValue(makePatient({ insurance: 'clear' }));
+      mockAuditLogCreate.mockResolvedValue({});
+      mockNotificationCreate.mockResolvedValue({});
+
+      await request(app).patch('/api/patients/1/insurance').send({ insurance: 'clear' });
+
+      expect(mockAuditLogCreate).toHaveBeenCalledWith({
+        data: {
+          patientId: 1,
+          column: 'insurance',
+          oldValue: 'not clear',
+          newValue: 'clear',
+        },
+      });
+    });
+  });
+
+  describe('notification', () => {
+    test('creates a notification for the patient mentioning the new insurance value', async () => {
+      mockFindUnique.mockResolvedValue(makePatient({ insurance: 'not clear' }));
+      mockUpdate.mockResolvedValue(makePatient({ insurance: 'self pay' }));
+      mockAuditLogCreate.mockResolvedValue({});
+      mockNotificationCreate.mockResolvedValue({});
+
+      await request(app).patch('/api/patients/1/insurance').send({ insurance: 'self pay' });
+
+      const callData = mockNotificationCreate.mock.calls[0][0].data;
+      expect(callData.patientId).toBe(1);
+      expect(callData.isRead).toBe(false);
+      expect(callData.message).toContain('self pay');
+    });
+  });
+
+  describe('validation', () => {
+    test('returns 400 when insurance field is missing', async () => {
+      const res = await request(app).patch('/api/patients/1/insurance').send({});
+      expect(res.status).toBe(400);
+      expect(res.body).toHaveProperty('error');
+    });
+
+    test('returns 400 when insurance value is not one of the allowed values', async () => {
+      const res = await request(app).patch('/api/patients/1/insurance').send({ insurance: 'unknown' });
+      expect(res.status).toBe(400);
+      expect(res.body).toHaveProperty('error');
+    });
+
+    test('error message lists the valid values', async () => {
+      const res = await request(app).patch('/api/patients/1/insurance').send({ insurance: 'invalid' });
+      expect(res.body.error).toContain('clear');
+      expect(res.body.error).toContain('not clear');
+      expect(res.body.error).toContain('self pay');
+    });
+  });
+
+  describe('error handling', () => {
+    test('returns 404 when patient does not exist', async () => {
+      mockFindUnique.mockResolvedValue(null);
+      const res = await request(app).patch('/api/patients/999/insurance').send({ insurance: 'clear' });
+      expect(res.status).toBe(404);
+      expect(res.body).toHaveProperty('error', 'Patient not found');
+    });
+
+    test('returns 500 when the database throws', async () => {
+      mockFindUnique.mockRejectedValue(new Error('Connection refused'));
+      const res = await request(app).patch('/api/patients/1/insurance').send({ insurance: 'clear' });
+      expect(res.status).toBe(500);
+      expect(res.body).toHaveProperty('error');
+    });
+  });
+});
+
+describe('PATCH /api/patients/:id/clinical', () => {
+  beforeEach(() => {
+    mockFindUnique.mockReset();
+    mockUpdate.mockReset();
+    mockAuditLogCreate.mockReset();
+    mockNotificationCreate.mockReset();
+  });
+
+  describe('successful update', () => {
+    test('returns 200 with updated patient when column and value are valid', async () => {
+      mockFindUnique.mockResolvedValue(makePatient({ labs: 'not complete' }));
+      mockUpdate.mockResolvedValue(makePatient({ labs: 'complete' }));
+      mockAuditLogCreate.mockResolvedValue({});
+      mockNotificationCreate.mockResolvedValue({});
+
+      const res = await request(app).patch('/api/patients/1/clinical').send({ column: 'labs', value: 'complete' });
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('labs', 'complete');
+    });
+
+    test('response includes progress field with completed and total', async () => {
+      mockFindUnique.mockResolvedValue(makePatient());
+      mockUpdate.mockResolvedValue(makePatient({ labs: 'complete' }));
+      mockAuditLogCreate.mockResolvedValue({});
+      mockNotificationCreate.mockResolvedValue({});
+
+      const res = await request(app).patch('/api/patients/1/clinical').send({ column: 'labs', value: 'complete' });
+      expect(res.body).toHaveProperty('progress');
+      expect(typeof res.body.progress.completed).toBe('number');
+      expect(typeof res.body.progress.total).toBe('number');
+    });
+
+    test('accepts all 11 valid clinical columns', async () => {
+      const columns = ['consult', 'labs', 'hematology', 'nephrology', 'dietitian',
+        'psychologist', 'endoscopy', 'barium', 'cardiology', 'colonoscopy', 'sleep'];
+
+      for (const column of columns) {
+        mockFindUnique.mockResolvedValue(makePatient());
+        mockUpdate.mockResolvedValue(makePatient({ [column]: 'complete' }));
+        mockAuditLogCreate.mockResolvedValue({});
+        mockNotificationCreate.mockResolvedValue({});
+
+        const res = await request(app).patch('/api/patients/1/clinical').send({ column, value: 'complete' });
+        expect(res.status).toBe(200);
+      }
+    });
+  });
+
+  describe('audit log', () => {
+    test('creates audit log with patientId, userId, column, oldValue, and newValue', async () => {
+      mockFindUnique.mockResolvedValue(makePatient({ dietitian: 'not complete' }));
+      mockUpdate.mockResolvedValue(makePatient({ dietitian: 'ordered' }));
+      mockAuditLogCreate.mockResolvedValue({});
+      mockNotificationCreate.mockResolvedValue({});
+
+      await request(app).patch('/api/patients/1/clinical').send({ column: 'dietitian', value: 'ordered' });
+
+      expect(mockAuditLogCreate).toHaveBeenCalledWith({
+        data: {
+          patientId: 1,
+          column: 'dietitian',
+          oldValue: 'not complete',
+          newValue: 'ordered',
+        },
+      });
+    });
+  });
+
+  describe('notification', () => {
+    test('creates a notification for the patient mentioning the column and new value', async () => {
+      mockFindUnique.mockResolvedValue(makePatient({ sleep: 'not required' }));
+      mockUpdate.mockResolvedValue(makePatient({ sleep: 'ordered' }));
+      mockAuditLogCreate.mockResolvedValue({});
+      mockNotificationCreate.mockResolvedValue({});
+
+      await request(app).patch('/api/patients/1/clinical').send({ column: 'sleep', value: 'ordered' });
+
+      const callData = mockNotificationCreate.mock.calls[0][0].data;
+      expect(callData.patientId).toBe(1);
+      expect(callData.isRead).toBe(false);
+      expect(callData.message).toContain('sleep');
+      expect(callData.message).toContain('ordered');
+    });
+  });
+
+  describe('validation', () => {
+    test('returns 400 when column is missing', async () => {
+      const res = await request(app).patch('/api/patients/1/clinical').send({ value: 'complete' });
+      expect(res.status).toBe(400);
+      expect(res.body).toHaveProperty('error');
+    });
+
+    test('returns 400 when column is not a valid clinical column', async () => {
+      const res = await request(app).patch('/api/patients/1/clinical').send({ column: 'insurance', value: 'complete' });
+      expect(res.status).toBe(400);
+      expect(res.body).toHaveProperty('error');
+    });
+
+    test('error message lists all valid column names', async () => {
+      const res = await request(app).patch('/api/patients/1/clinical').send({ column: 'invalid', value: 'complete' });
+      expect(res.body.error).toContain('consult');
+      expect(res.body.error).toContain('labs');
+      expect(res.body.error).toContain('sleep');
+    });
+
+    test('returns 400 when value is missing', async () => {
+      const res = await request(app).patch('/api/patients/1/clinical').send({ column: 'labs' });
+      expect(res.status).toBe(400);
+      expect(res.body).toHaveProperty('error', 'value is required');
+    });
+  });
+
+  describe('error handling', () => {
+    test('returns 404 when patient does not exist', async () => {
+      mockFindUnique.mockResolvedValue(null);
+      const res = await request(app).patch('/api/patients/999/clinical').send({ column: 'labs', value: 'complete' });
+      expect(res.status).toBe(404);
+      expect(res.body).toHaveProperty('error', 'Patient not found');
+    });
+
+    test('returns 500 when the database throws', async () => {
+      mockFindUnique.mockRejectedValue(new Error('Connection refused'));
+      const res = await request(app).patch('/api/patients/1/clinical').send({ column: 'labs', value: 'complete' });
+      expect(res.status).toBe(500);
+      expect(res.body).toHaveProperty('error');
     });
   });
 });
