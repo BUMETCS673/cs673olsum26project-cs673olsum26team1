@@ -4,11 +4,28 @@ const prisma = require('../config/prisma');
 const { verifyAuth } = require('../middleware/verifyAuth');
 
 // GET /api/notifications/:patientId
-// Get all notifications for a patient
-router.get('/:patientId', async (req, res) => {
+// Get all notifications for a patient ordered by most recent first
+router.get('/:patientId', verifyAuth, async (req, res) => {
   try {
-    const { patientId } = req.params;
-    res.json({ message: `Get notifications for patient ${patientId} route working` });
+    const patientId = parseInt(req.params.patientId);
+
+    if (isNaN(patientId)) {
+      return res.status(400).json({ error: 'patientId must be a number' });
+    }
+
+    const notifications = await prisma.notification.findMany({
+      where: { patientId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        patientId: true,
+        message: true,
+        isRead: true,
+        createdAt: true,
+      },
+    });
+
+    res.json(notifications);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

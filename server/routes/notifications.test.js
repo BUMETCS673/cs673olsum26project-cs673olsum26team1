@@ -8,9 +8,10 @@ const request = require('supertest');
 const express = require('express');
 
 const mockNotificationCreate = jest.fn();
+const mockNotificationFindMany = jest.fn();
 
 jest.mock('../config/prisma', () => ({
-  notification: { create: mockNotificationCreate },
+  notification: { create: mockNotificationCreate, findMany: mockNotificationFindMany },
 }));
 
 jest.mock('../middleware/verifyAuth', () => ({
@@ -148,6 +149,95 @@ describe('POST /api/notifications', () => {
         .post('/api/notifications')
         .send({ patientId: 5, message: 'Some message' });
 
+      expect(res.status).toBe(500);
+      expect(res.body).toHaveProperty('error');
+    });
+  });
+});
+
+describe('GET /api/notifications/:patientId', () => {
+  beforeEach(() => {
+    mockNotificationFindMany.mockReset();
+  });
+
+  describe('response format', () => {
+    test('returns 200 with an array of notifications', async () => {
+      mockNotificationFindMany.mockResolvedValue([
+        makeNotification({ id: 2, createdAt: new Date('2026-05-30T10:00:00Z').toISOString() }),
+        makeNotification({ id: 1, createdAt: new Date('2026-05-29T10:00:00Z').toISOString() }),
+      ]);
+
+      const res = await request(app).get('/api/notifications/5');
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body).toHaveLength(2);
+    });
+
+    test('returns 200 with an empty array when patient has no notifications', async () => {
+      mockNotificationFindMany.mockResolvedValue([]);
+
+      const res = await request(app).get('/api/notifications/5');
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual([]);
+    });
+
+    test('each notification includes id, patientId, message, isRead, and createdAt', async () => {
+      mockNotificationFindMany.mockResolvedValue([makeNotification()]);
+
+      const res = await request(app).get('/api/notifications/5');
+      const notification = res.body[0];
+      expect(notification).toHaveProperty('id');
+      expect(notification).toHaveProperty('patientId');
+      expect(notification).toHaveProperty('message');
+      expect(notification).toHaveProperty('isRead');
+      expect(notification).toHaveProperty('createdAt');
+    });
+
+    test('queries prisma with correct patientId and descending order', async () => {
+      mockNotificationFindMany.mockResolvedValue([]);
+
+      await request(app).get('/api/notifications/5');
+
+      expect(mockNotificationFindMany).toHaveBeenCalledWith({
+        where: { patientId: 5 },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          patientId: true,
+          message: true,
+          isRead: true,
+          createdAt: true,
+        },
+      });
+    });
+
+    test('notifications are returned most recent first', async () => {
+      mockNotificationFindMany.mockResolvedValue([
+        makeNotification({ id: 3, createdAt: '2026-05-30T12:00:00Z' }),
+        makeNotification({ id: 2, createdAt: '2026-05-30T10:00:00Z' }),
+        makeNotification({ id: 1, createdAt: '2026-05-29T08:00:00Z' }),
+      ]);
+
+      const res = await request(app).get('/api/notifications/5');
+      expect(res.body[0].id).toBe(3);
+      expect(res.body[1].id).toBe(2);
+      expect(res.body[2].id).toBe(1);
+    });
+  });
+
+  describe('validation', () => {
+    test('returns 400 when patientId is not a number', async () => {
+      const res = await request(app).get('/api/notifications/abc');
+      expect(res.status).toBe(400);
+      expect(res.body).toHaveProperty('error');
+    });
+  });
+
+  describe('error handling', () => {
+    test('returns 500 when the database throws', async () => {
+      mockNotificationFindMany.mockRejectedValue(new Error('Connection refused'));
+
+      const res = await request(app).get('/api/notifications/5');
       expect(res.status).toBe(500);
       expect(res.body).toHaveProperty('error');
     });
