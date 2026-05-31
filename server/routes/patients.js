@@ -53,7 +53,7 @@ router.post('/', async (req, res) => {
 
 // GET /api/patients/:id
 // Get one patient by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', verifyAuth, async (req, res) => {
   try {
     const patient = await prisma.patient.findUnique({
       where: { id: parseInt(req.params.id) },
@@ -63,7 +63,7 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Patient not found' });
     }
 
-    res.json(patient);
+    res.json({ ...patient, progress: computeProgress(patient) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
