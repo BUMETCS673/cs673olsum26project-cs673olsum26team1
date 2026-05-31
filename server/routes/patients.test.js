@@ -312,7 +312,6 @@ describe('PATCH /api/patients/:id/insurance', () => {
       expect(mockAuditLogCreate).toHaveBeenCalledWith({
         data: {
           patientId: 1,
-          userId: 10,
           column: 'insurance',
           oldValue: 'not clear',
           newValue: 'clear',
@@ -435,7 +434,6 @@ describe('PATCH /api/patients/:id/clinical', () => {
       expect(mockAuditLogCreate).toHaveBeenCalledWith({
         data: {
           patientId: 1,
-          userId: 10,
           column: 'dietitian',
           oldValue: 'not complete',
           newValue: 'ordered',

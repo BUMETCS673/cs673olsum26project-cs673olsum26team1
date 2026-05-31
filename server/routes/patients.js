@@ -4,6 +4,7 @@ const prisma = require('../config/prisma');
 const { verifyAuth } = require('../middleware/verifyAuth');
 const { getSpecialistRecommendation } = require('../utils/routingLogic');
 const { searchPatients, computeProgress } = require('../searchDB/searchDB');
+const { createAuditEntry } = require('../utils/auditUtils');
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
@@ -91,15 +92,7 @@ router.patch('/:id/insurance', verifyAuth, async (req, res) => {
       data: { insurance },
     });
 
-    await prisma.auditLog.create({
-      data: {
-        patientId,
-        userId: req.user.id,
-        column: 'insurance',
-        oldValue: existing.insurance,
-        newValue: insurance,
-      },
-    });
+    await createAuditEntry(prisma, patientId, 'insurance', existing.insurance, insurance);
 
     await prisma.notification.create({
       data: {
@@ -145,15 +138,7 @@ router.patch('/:id/clinical', verifyAuth, async (req, res) => {
       data: { [column]: value },
     });
 
-    await prisma.auditLog.create({
-      data: {
-        patientId,
-        userId: req.user.id,
-        column,
-        oldValue: existing[column],
-        newValue: value,
-      },
-    });
+    await createAuditEntry(prisma, patientId, column, existing[column], value);
 
     await prisma.notification.create({
       data: {
