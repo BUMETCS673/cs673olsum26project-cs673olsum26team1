@@ -15,20 +15,24 @@ jest.mock('../config/firebase-admin', () => ({
   }),
 }));
 
-jest.mock('../config/prisma', () => ({
-  user: {
-    findUnique: jest.fn(),
-    create: jest.fn(),
-  },
-  patient: {
-    create: jest.fn(),
-    findUnique: jest.fn(),
-  },
-  auditLog: {
-    create: jest.fn(),
-  },
-  $disconnect: jest.fn(),
-}));
+jest.mock('../config/prisma', () => {
+  const mockPrisma = {
+    user: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+    },
+    patient: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+    },
+    auditLog: {
+      create: jest.fn(),
+    },
+    $disconnect: jest.fn(),
+  };
+  mockPrisma.$transaction = jest.fn(async (callback) => callback(mockPrisma));
+  return mockPrisma;
+});
 
 const app = require('../app');
 const prisma = require('../config/prisma');

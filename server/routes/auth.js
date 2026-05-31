@@ -52,7 +52,9 @@ router.post(
       });
 
       if (existingUser) {
-        return res.status(409).json({ error: 'User already registered' });
+        return res.status(409).json({ error: 'User already registered',
+           hint: 'Please log in instead'
+         });
       }
  
       const { newUser, newPatient } = await prisma.$transaction(async (tx) => {

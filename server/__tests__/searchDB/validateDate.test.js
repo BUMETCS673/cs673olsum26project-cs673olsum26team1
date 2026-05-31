@@ -6,7 +6,7 @@
 // Notes: I'm not very familair with Jest, so this was a good opportunity to learn more about unit tests in Jest. 
 
 
-const { parseDate, isValidDate, getDateRange } = require('./validateDate');
+const { parseDate, isValidDate, getDateRange } = require('../../searchDB/validateDate');
 
 describe('validateDate', () => {
   // ============================================
