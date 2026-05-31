@@ -71,10 +71,45 @@ router.get('/:id', verifyAuth, async (req, res) => {
 
 // PATCH /api/patients/:id/insurance
 // Coordinator updates insurance status
-router.patch('/:id/insurance', async (req, res) => {
+router.patch('/:id/insurance', verifyAuth, async (req, res) => {
   try {
-    const { id } = req.params;
-    res.json({ message: `Update insurance for patient ${id} route working` });
+    const patientId = parseInt(req.params.id);
+    const { insurance } = req.body;
+
+    const VALID_VALUES = ['clear', 'not clear', 'self pay'];
+    if (!insurance || !VALID_VALUES.includes(insurance)) {
+      return res.status(400).json({ error: `insurance must be one of: ${VALID_VALUES.join(', ')}` });
+    }
+
+    const existing = await prisma.patient.findUnique({ where: { id: patientId } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    const updated = await prisma.patient.update({
+      where: { id: patientId },
+      data: { insurance },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        patientId,
+        userId: req.user.id,
+        column: 'insurance',
+        oldValue: existing.insurance,
+        newValue: insurance,
+      },
+    });
+
+    await prisma.notification.create({
+      data: {
+        patientId,
+        message: `Your insurance status has been updated to "${insurance}" by ${req.user.name}.`,
+        isRead: false,
+      },
+    });
+
+    res.json({ ...updated, progress: computeProgress(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
