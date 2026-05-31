@@ -10,9 +10,10 @@ const express = require('express');
 
 // Mock the shared prisma instance used by our patients.js
 const mockFindMany = jest.fn();
+const mockFindUnique = jest.fn();
 
 jest.mock('../config/prisma', () => ({
-  patient: { findMany: mockFindMany },
+  patient: { findMany: mockFindMany, findUnique: mockFindUnique },
 }));
 
 // Bypass auth so tests focus on route/search logic, not Firebase
@@ -188,6 +189,59 @@ describe('GET /api/patients', () => {
       expect(whereClause.visitType).toBe('Endoscopic Obesity Specialist');
       expect(whereClause.insurance).toBe('self pay');
       expect(whereClause.OR.some((c) => c.name?.contains === 'Jane')).toBe(true);
+    });
+  });
+});
+
+describe('GET /api/patients/:id', () => {
+  beforeEach(() => {
+    mockFindUnique.mockReset();
+  });
+
+  describe('response format', () => {
+    test('returns 200 with patient data when patient exists', async () => {
+      mockFindUnique.mockResolvedValue(makePatient());
+      const res = await request(app).get('/api/patients/1');
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('id', 1);
+      expect(res.body).toHaveProperty('mrn', 'MRN001');
+      expect(res.body).toHaveProperty('name', 'Test Patient');
+    });
+
+    test('response includes progress field with completed and total', async () => {
+      mockFindUnique.mockResolvedValue(makePatient());
+      const res = await request(app).get('/api/patients/1');
+      expect(res.body).toHaveProperty('progress');
+      expect(typeof res.body.progress.completed).toBe('number');
+      expect(typeof res.body.progress.total).toBe('number');
+    });
+
+    test('progress is computed correctly for the returned patient', async () => {
+      mockFindUnique.mockResolvedValue(makePatient({ insurance: 'clear', labs: 'complete' }));
+      const res = await request(app).get('/api/patients/1');
+      expect(res.body.progress).toEqual({ completed: 2, total: 5 });
+    });
+
+    test('queries prisma with the correct integer id from the URL', async () => {
+      mockFindUnique.mockResolvedValue(makePatient({ id: 42 }));
+      await request(app).get('/api/patients/42');
+      expect(mockFindUnique).toHaveBeenCalledWith({ where: { id: 42 } });
+    });
+  });
+
+  describe('error handling', () => {
+    test('returns 404 when patient does not exist', async () => {
+      mockFindUnique.mockResolvedValue(null);
+      const res = await request(app).get('/api/patients/999');
+      expect(res.status).toBe(404);
+      expect(res.body).toHaveProperty('error', 'Patient not found');
+    });
+
+    test('returns 500 when the database throws', async () => {
+      mockFindUnique.mockRejectedValue(new Error('Connection refused'));
+      const res = await request(app).get('/api/patients/1');
+      expect(res.status).toBe(500);
+      expect(res.body).toHaveProperty('error');
     });
   });
 });
