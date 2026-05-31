@@ -116,11 +116,54 @@ router.patch('/:id/insurance', verifyAuth, async (req, res) => {
 });
 
 // PATCH /api/patients/:id/clinical
-// Coordinator updates clinical order columns
-router.patch('/:id/clinical', async (req, res) => {
+// Coordinator updates a clinical order column
+router.patch('/:id/clinical', verifyAuth, async (req, res) => {
   try {
-    const { id } = req.params;
-    res.json({ message: `Update clinical column for patient ${id} route working` });
+    const patientId = parseInt(req.params.id);
+    const { column, value } = req.body;
+
+    const VALID_COLUMNS = [
+      'consult', 'labs', 'hematology', 'nephrology', 'dietitian',
+      'psychologist', 'endoscopy', 'barium', 'cardiology', 'colonoscopy', 'sleep',
+    ];
+
+    if (!column || !VALID_COLUMNS.includes(column)) {
+      return res.status(400).json({ error: `column must be one of: ${VALID_COLUMNS.join(', ')}` });
+    }
+
+    if (value === undefined || value === null || value === '') {
+      return res.status(400).json({ error: 'value is required' });
+    }
+
+    const existing = await prisma.patient.findUnique({ where: { id: patientId } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    const updated = await prisma.patient.update({
+      where: { id: patientId },
+      data: { [column]: value },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        patientId,
+        userId: req.user.id,
+        column,
+        oldValue: existing[column],
+        newValue: value,
+      },
+    });
+
+    await prisma.notification.create({
+      data: {
+        patientId,
+        message: `Your ${column} status has been updated to "${value}" by ${req.user.name}.`,
+        isRead: false,
+      },
+    });
+
+    res.json({ ...updated, progress: computeProgress(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
