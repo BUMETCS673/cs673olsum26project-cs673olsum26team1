@@ -9,12 +9,13 @@ function PatientPortal() {
 
   useEffect(() => {
     if (!user?.patientId) return;
-
+  
     fetch(`/api/patients/${user.patientId}`, {
       headers: { Authorization: `Bearer ${user.token}` }
     })
       .then(res => res.json())
-      .then(data => setProgress(data.progress));
+      .then(data => setProgress(data.progress))
+      .catch(err => console.error('Failed to fetch progress:', err));
   }, [user]);
 
   const isCleared = progress.completed === progress.total && progress.total > 0;
