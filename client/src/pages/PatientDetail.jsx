@@ -11,9 +11,8 @@ import Navbar from '../components/Navbar';
 import StatusBadge from '../components/StatusBadge';
 import ProgressBar from '../components/ProgressBar';
 import ClinicalChecklist from '../components/ClinicalChecklist';
+import InsuranceUpdate from '../components/InsuranceUpdate';
 import { apiRequest } from '../utils/api';
-
-const INSURANCE_OPTIONS = ['clear', 'not clear', 'self pay'];
 
 // AI-ASSISTED: YES
 // Tool: Claude Code
@@ -108,7 +107,7 @@ const PatientHeader = ({ patient, onPatientUpdate }) => {
 
         <div className="row g-3">
           <div className="col-sm-4">
-            <InsuranceSection
+            <InsuranceUpdate
               patientId={patient.id}
               currentInsurance={patient.insurance}
               onSaved={onPatientUpdate}
@@ -124,74 +123,6 @@ const PatientHeader = ({ patient, onPatientUpdate }) => {
           </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-const InsuranceSection = ({ patientId, currentInsurance, onSaved }) => {
-  const [selected, setSelected] = useState(currentInsurance ?? '');
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState(null);
-
-  useEffect(() => {
-    setSelected(currentInsurance ?? '');
-  }, [currentInsurance]);
-
-  const handleSave = async () => {
-    setSaving(true);
-    setSaveError(null);
-    try {
-      const updated = await apiRequest(`/patients/${patientId}/insurance`, {
-        method: 'PATCH',
-        body: JSON.stringify({ insurance: selected }),
-      });
-      onSaved(updated);
-    } catch (err) {
-      setSaveError(err.message || 'Failed to save insurance status.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const hasChanged = selected !== currentInsurance;
-
-  return (
-    <div>
-      <small className="text-muted d-block mb-1">Insurance</small>
-      <StatusBadge type="insurance" value={currentInsurance} />
-      <div className="mt-2 d-flex align-items-center gap-2">
-        <select
-          className="form-select form-select-sm"
-          value={selected}
-          onChange={(e) => { setSelected(e.target.value); setSaveError(null); }}
-          disabled={saving}
-          aria-label="Change insurance status"
-          style={{ maxWidth: '160px' }}
-        >
-          {INSURANCE_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt.charAt(0).toUpperCase() + opt.slice(1)}
-            </option>
-          ))}
-        </select>
-        <button
-          className="btn btn-primary btn-sm"
-          onClick={handleSave}
-          disabled={saving || !hasChanged}
-        >
-          {saving ? (
-            <>
-              <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" />
-              Saving…
-            </>
-          ) : 'Save'}
-        </button>
-      </div>
-      {saveError && (
-        <div className="alert alert-danger mt-2 py-1 px-2 small" role="alert">
-          {saveError}
-        </div>
-      )}
     </div>
   );
 };
