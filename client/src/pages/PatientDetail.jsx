@@ -1,7 +1,7 @@
 // AI-USAGE SUMMARY
 // Tools: Claude Code
 // Overall AI Contribution: ~90%
-// AI-Assisted Areas: Component structure, data fetching, UI layout, insurance PATCH integration, accessibility attributes
+// AI-Assisted Areas: Component structure, data fetching, UI layout, insurance and clinical PATCH integration, accessibility attributes
 // Human Contributions: Design requirements and acceptance criteria provided in prompt, testing, and final integration
 // Notes: See below for detailed breakdown of contributions and modifications.
 
@@ -10,18 +10,19 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import StatusBadge from '../components/StatusBadge';
 import ProgressBar from '../components/ProgressBar';
+import ClinicalChecklist from '../components/ClinicalChecklist';
 import { apiRequest } from '../utils/api';
 
 const INSURANCE_OPTIONS = ['clear', 'not clear', 'self pay'];
 
 // AI-ASSISTED: YES
 // Tool: Claude Code
-// Prompt Summary: Build PatientDetail page with basic layout, patient header info card,
-//   and insurance status section connected to PATCH /api/patients/:id/insurance.
+// Prompt Summary: Build PatientDetail page with patient header, insurance section, and
+//   clinical checklist table connected to PATCH /api/patients/:id/clinical.
 // AI Contribution: Initial draft (~90%)
 // Modifications: Business logic and acceptance criteria provided by human; integrated existing
-//   shared components (Navbar, StatusBadge, ProgressBar) and apiRequest utility.
-// Verification: Manually tested loading, error, saving indicator, and badge update states.
+//   shared components and apiRequest utility.
+// Verification: Manually tested loading, saving indicator, badge update, and progress update.
 // Confidence: High
 const PatientDetail = () => {
   const { id } = useParams();
@@ -75,7 +76,10 @@ const PatientDetail = () => {
         )}
 
         {!loading && !error && patient && (
-          <PatientHeader patient={patient} onPatientUpdate={setPatient} />
+          <>
+            <PatientHeader patient={patient} onPatientUpdate={setPatient} />
+            <ClinicalChecklist patient={patient} onPatientUpdate={setPatient} />
+          </>
         )}
       </div>
     </>
@@ -177,11 +181,7 @@ const InsuranceSection = ({ patientId, currentInsurance, onSaved }) => {
         >
           {saving ? (
             <>
-              <span
-                className="spinner-border spinner-border-sm me-1"
-                role="status"
-                aria-hidden="true"
-              />
+              <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" />
               Saving…
             </>
           ) : 'Save'}
