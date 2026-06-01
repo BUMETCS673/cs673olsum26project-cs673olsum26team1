@@ -33,11 +33,22 @@ router.get('/:patientId', verifyAuth, async (req, res) => {
 
 // PATCH /api/notifications/:id/read
 // Mark notification as read
-router.patch('/:id/read', async (req, res) => {
+router.patch('/:id/read', verifyAuth, async (req, res) => {
   try {
-    const { id } = req.params;
-    res.json({ message: `Mark notification ${id} as read route working` });
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'id must be a number' });
+    }
+    const notification = await prisma.notification.update({
+      where: { id },
+      data: { isRead: true },
+      select: { id: true, isRead: true },
+    });
+    res.json(notification);
   } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
     res.status(500).json({ error: error.message });
   }
 });
