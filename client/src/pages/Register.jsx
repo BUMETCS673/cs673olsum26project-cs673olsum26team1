@@ -209,6 +209,24 @@ function RegisterPage() {
             </div>
           </Form.Group>
 
+          <Form.Group className="mb-3">
+            <Form.Check
+              type="checkbox"
+              id="privacyConsent"
+              required
+              disabled={loading}
+              label={
+                <span style={{ fontSize: '0.875rem' }}>
+                  I have read and agree to the{' '}
+                  <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer">
+                    Privacy Policy & Terms of Consent
+                  </Link>
+                  . I understand how my health data will be used.
+                </span>
+              }
+            />
+          </Form.Group>
+
           <Button
             variant="primary" type="submit"
             className="w-100" disabled={loading}

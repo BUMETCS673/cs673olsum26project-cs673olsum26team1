@@ -21,6 +21,7 @@ import BMIForm from './pages/BMIForm';
 import ThankYouPage from './pages/ThankYouPage';
 import CoordinatorDashboard from './pages/CoordinatorDashboard';
 import DirectorDashboard from './pages/DirectorDashboard';
+import PrivacyPolicyPage from './pages/PrivacyPolicy';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/bmi-calculation" element={<BMICalculationPage />} />
           <Route path="/bmi-ineligible" element={<BmiIneligiblePage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 
           {/* Protected routes — one canonical path each */}
           <Route
