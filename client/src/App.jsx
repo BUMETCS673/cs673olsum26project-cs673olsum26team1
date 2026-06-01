@@ -13,6 +13,7 @@ import PatientPortal from './pages/PatientPortal';
 import BMIForm from './pages/BMIForm';
 import ThankYouPage from './pages/ThankYouPage';
 import CoordinatorDashboard from './pages/CoordinatorDashboard';
+import PatientDetail from './pages/PatientDetail';
 import DirectorDashboard from './pages/DirectorDashboard';
 
 function App() {
@@ -58,6 +59,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['COORDINATOR']}>
                 <CoordinatorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/coordinator/patients/:id"
+            element={
+              <ProtectedRoute allowedRoles={['COORDINATOR']}>
+                <PatientDetail />
               </ProtectedRoute>
             }
           />
