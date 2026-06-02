@@ -1,3 +1,11 @@
+
+// AI-USAGE SUMMARY
+// Tools: ChatGPT
+// Overall AI Contribution: ~10%
+// AI-Assisted Areas: Minor configuration guidance
+// Human Contributions: Main implementation, integration, and verification
+// Notes: File primarily implemented and validated manually.
+
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Spinner } from 'react-bootstrap';

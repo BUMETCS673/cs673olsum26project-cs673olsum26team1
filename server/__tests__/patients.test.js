@@ -31,7 +31,7 @@ jest.mock('../middleware/verifyAuth', () => ({
   requireRole: () => (req, res, next) => next(),
 }));
 
-const patientRouter = require('./patients');
+const patientRouter = require('../routes/patients');
 
 const app = express();
 app.use(express.json());

@@ -1,3 +1,10 @@
+// AI-USAGE SUMMARY
+// Tools: ChatGPT
+// Overall AI Contribution: ~40%
+// AI-Assisted Areas: Test scaffolding, authentication flow structure, Firebase env handling, protected route logic
+// Human Contributions: Business rules, debugging, project integration, validation, testing, and final verification
+// Notes: AI-generated suggestions were reviewed, modified, and manually tested before integration.
+
 /**
  * Google sign-in/up button with the official Google "G" logo.
  */
