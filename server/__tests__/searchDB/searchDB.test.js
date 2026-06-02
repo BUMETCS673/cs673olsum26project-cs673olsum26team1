@@ -11,8 +11,8 @@
  * Tests all search and date parsing functionality
  */
 
-const { searchPatients } = require('./searchDB');
-const { parseDate, isValidDate } = require('./validateDate');
+const { searchPatients } = require('../../searchDB/searchDB');
+const { parseDate, isValidDate } = require('../../searchDB/validateDate');
 
 describe('searchDB', () => {
   let mockPrisma;

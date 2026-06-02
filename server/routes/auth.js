@@ -52,34 +52,49 @@ router.post(
       });
 
       if (existingUser) {
-        return res.status(409).json({ error: 'User already registered' });
+        return res.status(409).json({ error: 'User already registered',
+           hint: 'Please log in instead'
+         });
       }
-
-      const newUser = await prisma.user.create({
-        data: { firebaseUid, name, email, role: 'PATIENT' },
+ 
+      const { newUser, newPatient } = await prisma.$transaction(async (tx) => {
+        const createdUser = await tx.user.create({
+          data: {
+            firebaseUid,
+            name,
+            email,
+            role: 'PATIENT',
+          },
+        });
+      
+        const mrn = `MRN${String(createdUser.id).padStart(6, '0')}`;
+      
+        const createdPatient = await tx.patient.create({
+          data: {
+            userId: createdUser.id,
+            mrn,
+            name,
+            dateOfBirth: new Date(patientDateOfBirth),
+            bmi: 0,
+          },
+        });
+      
+        await tx.auditLog.create({
+          data: {
+            userId: createdUser.id,
+            patientId: createdPatient.id,
+            column: 'user.created',
+            oldValue: '',
+            newValue: `User ${email} registered as PATIENT`,
+          },
+        });
+      
+        return {
+          newUser: createdUser,
+          newPatient: createdPatient,
+        };
       });
 
-      const mrn = `MRN${String(newUser.id).padStart(6, '0')}`;
-      const newPatient = await prisma.patient.create({
-        data: {
-          userId: newUser.id,
-          mrn,
-          name,
-          // dateOfBirth: new Date(dateOfBirth),
-          dateOfBirth: new Date(patientDateOfBirth),
-          bmi: 0,
-        },
-      });
-
-      await prisma.auditLog.create({
-        data: {
-          userId: newUser.id,
-          patientId: newPatient.id,
-          column: 'user.created',
-          oldValue: '',
-          newValue: `User ${email} registered as PATIENT`,
-        },
-      });
 
       return res.status(201).json({
         id: newUser.id,
@@ -89,6 +104,7 @@ router.post(
         role: newUser.role,
         createdAt: newUser.createdAt,
       });
+    
     } catch (error) {
       console.error('Registration error:', error);
       if (error.code === 'auth/id-token-expired') {
