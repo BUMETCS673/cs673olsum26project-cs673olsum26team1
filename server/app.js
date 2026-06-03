@@ -25,10 +25,15 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai', aiRoutes);
+
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
+
+// AI -route
+const aiRoutes = require('./routes/ai');
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
