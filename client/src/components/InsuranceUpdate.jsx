@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import StatusBadge from './StatusBadge';
 import { apiRequest } from '../utils/api';
 
-const INSURANCE_OPTIONS = ['clear', 'not clear', 'self pay'];
+const INSURANCE_OPTIONS = ['clear', 'not clear', 'self pay', 'in review'];
 
 // AI-ASSISTED: YES
 // Tool: Claude Code
@@ -62,7 +62,7 @@ const InsuranceUpdate = ({ patientId, currentInsurance, onSaved }) => {
         >
           {INSURANCE_OPTIONS.map((opt) => (
             <option key={opt} value={opt}>
-              {opt.charAt(0).toUpperCase() + opt.slice(1)}
+              {opt === 'not clear' ? 'Not Started' : opt === 'self pay' ? 'Self Pay' : opt === 'in review' ? 'In Review' : 'Clear'}
             </option>
           ))}
         </select>

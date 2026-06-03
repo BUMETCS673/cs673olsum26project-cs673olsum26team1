@@ -64,7 +64,52 @@ router.get('/:id', verifyAuth, async (req, res) => {
       return res.status(404).json({ error: 'Patient not found' });
     }
 
-    res.json({ ...patient, progress: computeProgress(patient) });
+    const { REQUIRED_ITEMS } = require('../searchDB/calculateProgress');
+    const progress = computeProgress(patient);
+
+    const matchedKey = Object.keys(REQUIRED_ITEMS).find(
+      (key) => key.toLowerCase() === patient.visitType?.toLowerCase()
+    );
+    const requiredFields = REQUIRED_ITEMS[matchedKey] || [];
+
+    const checklist = requiredFields.map((field) => {
+      let status = patient[field];
+      if (field === 'insurance') {
+        if (patient.insurance === 'clear' || patient.insurance === 'self pay') {
+          status = 'complete';
+        } else {
+          status = 'not complete';
+        }
+      } else {
+        if (status === 'not booked') {
+          status = 'not complete';
+        }
+      }
+      return {
+        field,
+        status: status || 'not complete',
+      };
+    });
+
+    // Find the last coordinator who made an audit log entry for this patient
+    const lastAuditLog = await prisma.auditLog.findFirst({
+      where: {
+        patientId: patient.id,
+        user: { role: 'COORDINATOR' },
+      },
+      orderBy: { timestamp: 'desc' },
+      include: { user: true },
+    });
+    const assignedCoordinator = lastAuditLog?.user?.name || null;
+
+    res.json({
+      ...patient,
+      insuranceStatus: patient.insurance,
+      assignedSpecialist: patient.visitType,
+      progress,
+      checklist,
+      assignedCoordinator,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -77,7 +122,7 @@ router.patch('/:id/insurance', verifyAuth, async (req, res) => {
     const patientId = parseInt(req.params.id);
     const { insurance } = req.body;
 
-    const VALID_VALUES = ['clear', 'not clear', 'self pay'];
+    const VALID_VALUES = ['clear', 'not clear', 'self pay', 'in review'];
     if (!insurance || !VALID_VALUES.includes(insurance)) {
       return res.status(400).json({ error: `insurance must be one of: ${VALID_VALUES.join(', ')}` });
     }
