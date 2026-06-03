@@ -18,119 +18,126 @@ CHROMA_PATH = "./chroma_db"
 # Each role gets a different instruction set but same RAG pipeline
 
 PROMPTS = {
-    "PATIENT": """You are a compassionate assistant for BariatricPath patients.
+    "PATIENT": """You are a helpful assistant for BariatricPath patients.
 Answer based only on the information provided below.
 Never give specific medical advice.
-If unsure, say: "Please contact your care coordinator for more details."
+If unsure, say: "Please contact your care coordinator."
+Use the patient's name at most once per conversation unless specifically needed.
 
-Patient current status:
+Patient status:
 {patient_context}
 
-Relevant program information:
+Program information:
 {context}
 
 Patient question: {question}
 
-Answer in 2-4 encouraging sentences:""",
+Answer in 2-3 sentences maximum. Be warm but concise:""",
 
-    "COORDINATOR": """You are an efficient assistant for BariatricPath care coordinators.
-Provide clear, professional, actionable guidance based on the information below.
+    "COORDINATOR": """You are an assistant for BariatricPath coordinators.
+Give clear, actionable guidance. Be direct and professional.
+Keep answers under 3 sentences unless listing steps.
 
-Coordinator context:
+Context:
 {patient_context}
 
-Relevant program information:
+Program information:
 {context}
 
-Coordinator question: {question}
+Question: {question}
 
-Answer concisely and professionally:""",
+Answer concisely:""",
 
-    "PROGRAM_DIRECTOR": """You are a strategic assistant for the BariatricPath program director.
-Provide high-level, data-focused insights based on the information below.
+    "PROGRAM_DIRECTOR": """You are an assistant for the BariatricPath program director.
+Be strategic and data-focused. Limit to 4-5 key points maximum.
+Use plain text only — no markdown bold or asterisks.
 
-Program context:
+Context:
 {patient_context}
 
-Relevant program information:
+Program information:
 {context}
 
-Director question: {question}
+Question: {question}
 
-Answer with a focus on program management and metrics:"""
+Answer with bullet points using plain dashes, max 5 points:"""
 }
 
+# Store conversation history per session
+# Key is patient_id, value is list of past messages
+conversation_memory = {}
 
-async def get_ai_response(question: str, patient_context: dict, role: str = "PATIENT") -> dict:
-    """
-    This is the main RAG function. Here is what it does step by step:
-    1. Connect to OpenAI for the LLM and embeddings
-    2. Convert the question into a vector and search ChromaDB for similar content
-    3. Take the retrieved content + patient context + question and build a prompt
-    4. Send the prompt to GPT and return the answer
-    """
-
+async def get_ai_response(question: str, patient_context: dict, role: str = "PATIENT", patient_id: int = 0) -> dict:
     openai_key = os.getenv("OPENAI_API_KEY")
     if not openai_key:
         raise ValueError("OPENAI_API_KEY not set in .env")
 
-    # Set up the LLM 
     llm = ChatOpenAI(
         model="gpt-4.1-mini",
-        temperature=0.3,  
+        temperature=0.3,
         api_key=openai_key
     )
 
-    #  embeddings (converts text to vectors for searching)
     embeddings = OpenAIEmbeddings(api_key=openai_key)
+    context_str = "\n".join([f"- {k}: {v}" for k, v in patient_context.items() if k != 'name'])
 
-    # Format patient context as readable text
-    context_str = "\n".join([f"- {k}: {v}" for k, v in patient_context.items()])
-
-    # Step 4: Search ChromaDB for relevant content
-    
+    # Retrieve from ChromaDB
     try:
-        vectorstore = Chroma(
-            persist_directory=CHROMA_PATH,
-            embedding_function=embeddings
-        )
-        
         role_to_metadata = {
             "PATIENT": "patient",
             "COORDINATOR": "coordinator",
             "PROGRAM_DIRECTOR": "program_director",
         }
-
         metadata_role = role_to_metadata.get(role, "patient")
 
-        retriever = vectorstore.as_retriever(
-            search_kwargs={
-                "k": 3,
-                "filter": {
-                    "role": metadata_role
-                }
-            }
+        vectorstore = Chroma(
+            persist_directory=CHROMA_PATH,
+            embedding_function=embeddings
         )
-
+        retriever = vectorstore.as_retriever(
+            search_kwargs={"k": 3, "filter": {"role": metadata_role}}
+        )
         relevant_docs = retriever.invoke(question)
         retrieved_context = "\n\n".join([doc.page_content for doc in relevant_docs])
     except Exception:
-        # If ChromaDB not loaded yet, fall back to GPT general knowledge
         retrieved_context = "No program-specific information available yet."
 
-    #  Pick the right prompt for this role
-    prompt_template = PROMPTS.get(role, PROMPTS["PATIENT"])
+    # Build memory string from past messages
+    session_key = f"{role}_{patient_id}"
+    if session_key not in conversation_memory:
+        conversation_memory[session_key] = []
 
-    #  Fill in the prompt with real values
+    history = conversation_memory[session_key]
+    history_str = ""
+    if history:
+        history_str = "\n\nPrevious conversation:\n"
+        for msg in history[-7:]:  # only last 7
+            history_str += f"User: {msg['question']}\nAssistant: {msg['answer']}\n"
+
+    # Build prompt with memory included
+    prompt_template = PROMPTS.get(role, PROMPTS["PATIENT"])
     filled_prompt = prompt_template.format(
         context=retrieved_context,
         question=question,
         patient_context=context_str
-    )
+    ) + history_str
 
     response = llm.invoke(filled_prompt)
+    answer = response.content
+
+    # Save this exchange to memory
+    conversation_memory[session_key].append({
+        "question": question,
+        "answer": answer
+    })
+
+    # Keep memory from growing too large
+    if len(conversation_memory[session_key]) > 10:
+        conversation_memory[session_key] = conversation_memory[session_key][-10:]
 
     return {
-        "answer": response.content,
+        "answer": answer,
         "sources": ["BariatricPath Program Guide"]
     }
+   
+

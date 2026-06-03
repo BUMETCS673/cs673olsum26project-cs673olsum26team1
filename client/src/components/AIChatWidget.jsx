@@ -4,7 +4,7 @@
 // AI-Assisted Areas: chat UI structure, message state, scroll behavior
 // Human Contributions: role integration, styling decisions, API wiring, testing
 // Notes: reusable across PatientPortal, CoordinatorDashboard, DirectorDashboard
-//        role prop controls prompt behavior in the AI service
+// role prop controls prompt behavior in the AI service
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -165,6 +165,7 @@ function AIChatWidget({ role, patientContext = {} }) {
                 maxWidth: '80%',
                 fontSize: '0.875rem',
                 lineHeight: '1.5',
+                textAlign: 'left',
               }}>
                 {msg.text}
               </div>

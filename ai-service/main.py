@@ -53,7 +53,9 @@ async def chat(request: ChatRequest):
         result = await get_ai_response(
             question=request.question,
             patient_context=request.patient_context,
-            role=request.role
+            role=request.role,
+            patient_id=request.patient_id
+
         )
         return ChatResponse(answer=result["answer"], sources=result["sources"])
     except ValueError as e:
