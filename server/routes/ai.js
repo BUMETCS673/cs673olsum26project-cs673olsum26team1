@@ -8,34 +8,35 @@
 const express = require('express');
 const router = express.Router();
 const { verifyAuth } = require('../middleware/verifyAuth');
-const prisma = require('../config/prisma');
+// const prisma = require('../config/prisma');
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 
 // POST /api/ai/chat
 router.post('/chat', verifyAuth, async (req, res) => {
   try {
-    const { question } = req.body;
-    const userId = req.user?.id;
+    const { question, role, patient_context, patient_id } = req.body;
+    // const userId = req.user?.id;
 
     if (!question || typeof question !== 'string' || !question.trim()) {
       return res.status(400).json({ error: 'question is required' });
     }
 
-    // Fetch patient context from DB
-    const patient = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        insuranceStatus: true,
-        assignedSpecialist: true,
-      }
-    });
+    // // Fetch patient context from DB
+    // const patient = await prisma.user.findUnique({
+    //   where: { id: userId },
+    //   select: {
+    //     id: true,
+    //     name: true,
+    //     insuranceStatus: true,
+    //     assignedSpecialist: true,
+    //   }
+    // });
 
-    if (!patient) {
-      return res.status(404).json({ error: 'Patient not found' });
-    }
+    // if (!patient) {
+    //   return res.status(404).json({ error: 'Patient not found' });
+    // }
+
 
     // Forward to Python AI service
     const aiResponse = await fetch(`${AI_SERVICE_URL}/chat`, {
@@ -43,11 +44,9 @@ router.post('/chat', verifyAuth, async (req, res) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         question: question.trim(),
-        patient_id: patient.id,
-        patient_context: {
-          insuranceStatus: patient.insuranceStatus,
-          assignedSpecialist: patient.assignedSpecialist,
-        }
+        patient_id: patient_id || req.user?.id || 0,
+        patient_context: patient_context || {},
+        role: role || 'PATIENT'
       })
     });
 
@@ -60,6 +59,7 @@ router.post('/chat', verifyAuth, async (req, res) => {
     res.json(data);
 
   } catch (error) {
+    console.error('AI route error:', error);
     res.status(500).json({ error: error.message });
   }
 });

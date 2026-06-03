@@ -5,6 +5,7 @@
 // Human Contributions: Design requirements and acceptance criteria provided in prompt, testing, and final integration
 // Notes: See below for detailed breakdown of contributions and modifications.
 
+import AIChatWidget from '../components/AIChatWidget';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -81,6 +82,16 @@ const PatientDetail = () => {
           </>
         )}
       </div>
+      <AIChatWidget
+      role="COORDINATOR"
+      patientContext={{
+        patientName: patient?.name,
+        insuranceStatus: patient?.insurance || "unknown",
+        assignedSpecialist: patient?.visitType || "not assigned",
+        bmi: patient?.bmi,
+        progress: patient?.progress,
+      }}
+    />
     </>
   );
 };

@@ -4,6 +4,8 @@
 // AI-Assisted Areas: polling logic, useEffect cleanup, notification rendering, token retrieval
 // Human Contributions: integration with AuthContext, route decisions, testing
 // Notes: polling every 30s per BARI-23 acceptance criteria. Token fetched via Firebase getIdToken.
+import AIChatWidget from '../components/AIChatWidget';
+
 
 import { useState, useEffect, useCallback } from 'react';
 import Navbar from '../components/Navbar';
@@ -99,19 +101,18 @@ function PatientPortal() {
                   <p className="mb-1">
                     <strong>Insurance:</strong>{' '}
                     <span className={`badge ${
-                      patientData.insuranceStatus === 'clear' ? 'bg-success' :
-                      patientData.insuranceStatus === 'not clear' ? 'bg-danger' :
+                      (patientData.insurance || patientData.insuranceStatus) === 'clear' ? 'bg-success' :
+                      (patientData.insurance || patientData.insuranceStatus) === 'not clear' ? 'bg-danger' :
                       'bg-warning text-dark'
                     }`}>
-                      {patientData.insuranceStatus || 'Pending'}
+                      {patientData.insurance || patientData.insuranceStatus || 'Pending'}
                     </span>
                   </p>
                 </div>
                 <div className="col-md-6">
                   <p className="mb-1">
                     <strong>Specialist:</strong>{' '}
-                    {patientData.assignedSpecialist || 'Not assigned yet'}
-                  </p>
+                    {patientData.visitType || patientData.assignedSpecialist || 'Not assigned yet'}                  </p>
                 </div>
               </div>
             </div>
@@ -157,6 +158,14 @@ function PatientPortal() {
           </ul>
         </div>
       </div>
+      <AIChatWidget 
+        role="PATIENT"
+        patientContext={{
+          insuranceStatus: patientData?.insurance || patientData?.insuranceStatus || "unknown",
+          assignedSpecialist: patientData?.visitType || patientData?.assignedSpecialist || "not yet assigned",
+          name: user?.name,
+        }}
+      />
     </>
   );
 }
