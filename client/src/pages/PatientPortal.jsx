@@ -122,6 +122,7 @@ function PatientPortal() {
     try {
       const data = await apiRequest(`/patients/${patientId}`);
       setPatientData(data);
+      setError(null);
     } catch (err) {
       setError(err.message);
     } finally {
