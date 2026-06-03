@@ -52,11 +52,12 @@ router.post(
       });
 
       if (existingUser) {
-        return res.status(409).json({ error: 'User already registered',
-           hint: 'Please log in instead'
-         });
+        return res.status(409).json({
+          error: 'User already registered',
+          hint: 'Please log in instead'
+        });
       }
- 
+
       const { newUser, newPatient } = await prisma.$transaction(async (tx) => {
         const createdUser = await tx.user.create({
           data: {
@@ -66,9 +67,9 @@ router.post(
             role: 'PATIENT',
           },
         });
-      
+
         const mrn = `MRN${String(createdUser.id).padStart(6, '0')}`;
-      
+
         const createdPatient = await tx.patient.create({
           data: {
             userId: createdUser.id,
@@ -78,7 +79,7 @@ router.post(
             bmi: 0,
           },
         });
-      
+
         await tx.auditLog.create({
           data: {
             userId: createdUser.id,
@@ -88,7 +89,7 @@ router.post(
             newValue: `User ${email} registered as PATIENT`,
           },
         });
-      
+
         return {
           newUser: createdUser,
           newPatient: createdPatient,
@@ -104,7 +105,7 @@ router.post(
         role: newUser.role,
         createdAt: newUser.createdAt,
       });
-    
+
     } catch (error) {
       console.error('Registration error:', error);
       if (error.code === 'auth/id-token-expired') {
@@ -116,7 +117,7 @@ router.post(
       return res.status(500).json({ error: 'Registration failed' });
     }
   }
-);  
+);
 
 // POST /api/auth/login
 // Login and return user role
@@ -141,7 +142,7 @@ router.post(
         where: { firebaseUid },
       });
 
-      
+
       if (!user) {
         user = await prisma.user.create({
           data: {

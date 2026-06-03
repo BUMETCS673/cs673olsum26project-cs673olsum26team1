@@ -55,14 +55,21 @@ describe('StatusBadge', () => {
 
     it('renders not clear with danger badge', () => {
       render(<StatusBadge type="insurance" value="not clear" />);
-      const badge = screen.getByText('Not Clear');
+      const badge = screen.getByText('Not Complete');
       expect(badge).toBeInTheDocument();
       expect(badge).toHaveClass('bg-danger');
     });
 
-    it('renders self pay with warning badge', () => {
+    it('renders self pay with secondary badge', () => {
       render(<StatusBadge type="insurance" value="self pay" />);
-      const badge = screen.getByText('Self Pay');
+      const badge = screen.getByText('Not Required');
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveClass('bg-secondary');
+    });
+
+    it('renders in review with warning badge', () => {
+      render(<StatusBadge type="insurance" value="in review" />);
+      const badge = screen.getByText('In Review');
       expect(badge).toBeInTheDocument();
       expect(badge).toHaveClass('bg-warning');
     });
@@ -82,16 +89,16 @@ describe('StatusBadge', () => {
       expect(badge).toHaveClass('bg-secondary');
     });
 
-    it('renders not complete with danger badge', () => {
+    it('renders not complete with danger badge as Not Started', () => {
       render(<StatusBadge type="checklist" value="not complete" />);
-      const badge = screen.getByText('Not Complete');
+      const badge = screen.getByText('Not Started');
       expect(badge).toBeInTheDocument();
       expect(badge).toHaveClass('bg-danger');
     });
 
-    it('renders ordered with primary badge', () => {
+    it('renders ordered with primary badge as Scheduled', () => {
       render(<StatusBadge type="checklist" value="ordered" />);
-      const badge = screen.getByText('Ordered');
+      const badge = screen.getByText('Scheduled');
       expect(badge).toBeInTheDocument();
       expect(badge).toHaveClass('bg-primary');
     });

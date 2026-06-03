@@ -20,20 +20,22 @@ const SPECIALIST_COLORS = {
 
 const INSURANCE_LABELS = {
   'clear': 'Clear',
-  'not clear': 'Not Clear',
-  'self pay': 'Self Pay',
+  'not clear': 'Not Complete',
+  'self pay': 'Not Required',
+  'in review': 'In Review',
 };
 
 const INSURANCE_COLORS = {
   'clear': 'success',
   'not clear': 'danger',
-  'self pay': 'warning',
+  'self pay': 'secondary',
+  'in review': 'warning',
 };
 
 const CHECKLIST_LABELS = {
   'not required': 'Not Required',
-  'not complete': 'Not Complete',
-  'ordered':      'Ordered',
+  'not complete': 'Not Started',
+  'ordered':      'Scheduled',
   'in progress':  'In Progress',
   'complete':     'Complete',
 };
