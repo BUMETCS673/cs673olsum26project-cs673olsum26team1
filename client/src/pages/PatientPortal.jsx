@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
+import SurgeryCleared from '../components/SurgeryCleared';
 import { auth } from '../config/firebase';
 import { apiRequest } from '../utils/api';
 import StatusBadge from '../components/StatusBadge';
@@ -158,6 +159,11 @@ function PatientPortal() {
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
+  const isCleared =
+  patientData?.progress &&
+  patientData.progress.completed === patientData.progress.total &&
+  patientData.progress.total > 0;
+
   if (loading) return (
     <>
       <Navbar />
@@ -181,6 +187,8 @@ function PatientPortal() {
         {error && (
           <div className="alert alert-warning" role="alert">{error}</div>
         )}
+
+        {isCleared && <SurgeryCleared />}
 
         {/* Progress Bar Section */}
         {patientData && patientData.progress && (

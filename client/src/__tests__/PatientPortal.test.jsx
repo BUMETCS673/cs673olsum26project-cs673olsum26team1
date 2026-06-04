@@ -312,4 +312,59 @@ describe('PatientPortal', () => {
       expect(screen.getByText('No coordinator is assigned.')).toBeInTheDocument();
     });
   });
+
+  describe('Surgery Cleared banner', () => {
+    it('shows the banner when all checklist items are complete (progress = 100%)', async () => {
+      apiRequest.mockImplementation((endpoint) => {
+        if (endpoint.includes('patients')) return Promise.resolve({
+          ...mockPatientData,
+          progress: { completed: 7, total: 7 },
+          checklist: mockPatientData.checklist.map(item => ({ ...item, status: 'complete' })),
+        });
+        if (endpoint.includes('notifications')) return Promise.resolve(mockNotifications);
+        return Promise.resolve({});
+      });
+ 
+      render(<PatientPortal />);
+ 
+      await waitFor(() => {
+        expect(screen.getByText('You are cleared for surgery!')).toBeInTheDocument();
+      });
+    });
+ 
+    it('does not show the banner when one or more items are incomplete', async () => {
+      // beforeEach provides mockPatientData with progress 2/5 — no override needed.
+      render(<PatientPortal />);
+ 
+      await waitFor(() => {
+        expect(screen.getByText(/Your overall preparation progress/)).toBeInTheDocument();
+      });
+ 
+      expect(screen.queryByText('You are cleared for surgery!')).not.toBeInTheDocument();
+    });
+ 
+    it('does not show the banner when the checklist is empty (total = 0)', async () => {
+      // completed === total is trivially true when both are 0, so the
+      // total > 0 guard on line 165 must be what prevents the banner.
+      apiRequest.mockImplementation((endpoint) => {
+        if (endpoint.includes('patients')) return Promise.resolve({
+          ...mockPatientData,
+          progress: { completed: 0, total: 0 },
+          checklist: [],
+        });
+        if (endpoint.includes('notifications')) return Promise.resolve(mockNotifications);
+        return Promise.resolve({});
+      });
+ 
+      render(<PatientPortal />);
+ 
+      await waitFor(() => {
+        expect(screen.getByText(/Welcome back, Jane/)).toBeInTheDocument();
+      });
+ 
+      expect(screen.queryByText('You are cleared for surgery!')).not.toBeInTheDocument();
+    });
+  });
+
+
 });
