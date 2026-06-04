@@ -1,3 +1,9 @@
+// AI-USAGE SUMMARY
+// Tools: ChatGPT
+// Overall AI Contribution: ~25%
+// AI-Assisted Areas: Initial component structure and routing suggestions
+// Human Contributions: UI integration, debugging, Firebase integration, styling adjustments, and testing
+// Notes: Code was adapted to fit BariatricPath authentication and routing requirements.
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Form, Button, Spinner } from 'react-bootstrap';
@@ -201,6 +207,24 @@ function RegisterPage() {
                 placeholder="Re-enter your password"
               />
             </div>
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Check
+              type="checkbox"
+              id="privacyConsent"
+              required
+              disabled={loading}
+              label={
+                <span style={{ fontSize: '0.875rem' }}>
+                  I have read and agree to the{' '}
+                  <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer">
+                    Privacy Policy & Terms of Consent
+                  </Link>
+                  . I understand how my health data will be used.
+                </span>
+              }
+            />
           </Form.Group>
 
           <Button

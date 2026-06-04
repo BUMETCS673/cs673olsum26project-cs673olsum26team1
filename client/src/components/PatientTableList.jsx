@@ -6,10 +6,12 @@
 // Notes: see below for detailed breakdown of contributions and modifications.
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import ProgressBar from './ProgressBar';
 import StatusBadge from './StatusBadge';
 
 const PatientTableList = ({ patients }) => {
+  const navigate = useNavigate();
  // AI-ASSISTED: YES 
 // Tool: Claude Code
 // Prompt Summary: This component was originally part of the coordinator dashboard component. 
@@ -42,7 +44,11 @@ const PatientTableList = ({ patients }) => {
             const progress = patient.progress ?? { completed: 0, total: 0 };
 
             return (
-              <tr key={patient.id}>
+              <tr
+                key={patient.id}
+                onClick={() => navigate(`/coordinator/patients/${patient.id}`)}
+                style={{ cursor: 'pointer' }}
+              >
                 <td className="text-nowrap">{patient.mrn}</td>
                 <td>{patient.name}</td>
                 <td>{patient.bmi}</td>

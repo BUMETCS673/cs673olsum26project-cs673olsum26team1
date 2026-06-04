@@ -10,8 +10,14 @@ const express = require('express');
 const mockNotificationCreate = jest.fn();
 const mockNotificationFindMany = jest.fn();
 
+const mockNotificationUpdate = jest.fn();
+
 jest.mock('../config/prisma', () => ({
-  notification: { create: mockNotificationCreate, findMany: mockNotificationFindMany },
+  notification: {
+    create: mockNotificationCreate,
+    findMany: mockNotificationFindMany,
+    update: mockNotificationUpdate,
+  },
 }));
 
 jest.mock('../middleware/verifyAuth', () => ({
@@ -22,7 +28,7 @@ jest.mock('../middleware/verifyAuth', () => ({
   requireRole: () => (req, res, next) => next(),
 }));
 
-const notificationRouter = require('./notifications');
+const notificationRouter = require('../routes/notifications');
 
 const app = express();
 app.use(express.json());
@@ -240,6 +246,46 @@ describe('GET /api/notifications/:patientId', () => {
       const res = await request(app).get('/api/notifications/5');
       expect(res.status).toBe(500);
       expect(res.body).toHaveProperty('error');
+    });
+  });
+  describe('PATCH /api/notifications/:id/read', () => {
+    const mockNotificationUpdate = jest.fn();
+  
+    beforeAll(() => {
+      require('../config/prisma').notification.update = mockNotificationUpdate;
+    });
+  
+    beforeEach(() => {
+      mockNotificationUpdate.mockReset();
+    });
+  
+    test('marks notification as read and returns updated record', async () => {
+      mockNotificationUpdate.mockResolvedValue({ id: 1, isRead: true });
+  
+      const res = await request(app)
+        .patch('/api/notifications/1/read')
+        .set('Authorization', 'Bearer fake-token');
+  
+      expect(res.status).toBe(200);
+      expect(res.body.isRead).toBe(true);
+    });
+  
+    test('returns 400 when id is not a number', async () => {
+      const res = await request(app)
+        .patch('/api/notifications/abc/read');
+  
+      expect(res.status).toBe(400);
+    });
+  
+    test('returns 404 when notification does not exist', async () => {
+      const err = new Error('Not found');
+      err.code = 'P2025';
+      mockNotificationUpdate.mockRejectedValue(err);
+  
+      const res = await request(app)
+        .patch('/api/notifications/999/read');
+  
+      expect(res.status).toBe(404);
     });
   });
 });

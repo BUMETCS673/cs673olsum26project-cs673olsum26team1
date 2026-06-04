@@ -25,4 +25,4 @@ const computeProgress = (patient) => {
   return { completed, total };
 };
 
-module.exports = { computeProgress };
+module.exports = { computeProgress, REQUIRED_ITEMS };
