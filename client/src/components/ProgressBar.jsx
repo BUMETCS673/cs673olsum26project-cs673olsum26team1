@@ -7,25 +7,61 @@
 
 import React from 'react';
 
-const ProgressBar = ({ completed, total }) => {
- // AI-ASSISTED: YES 
-// Tool: Claude Code
-// Prompt Summary: Show a progress bar indicating the percentage of completed steps out of total steps for a patient.
-// I also provided a rough design of the progress bar. 
-// Modifications: 
-//  - Not much modification. 
-// Verification: 
-// - Manually tested the component in the coordinator dashboard to ensure it renders correctly and and shows progress as expected.
-// Confidence: High
+const ProgressBar = ({ completed, total, alwaysGreen = false, striped = false, animated = false, variant = 'simple' }) => {
   const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
-  const color = pct === 100 ? 'success' : pct >= 40 ? 'warning' : 'danger';
+  
+  let color = pct === 100 ? 'success' : pct >= 40 ? 'warning' : 'danger';
+  if (alwaysGreen) {
+    color = 'success';
+  }
+
+  const barClasses = [
+    'progress-bar',
+    `bg-${color}`,
+    striped && 'progress-bar-striped',
+    animated && 'progress-bar-animated'
+  ].filter(Boolean).join(' ');
+
+  if (variant === 'detailed') {
+    return (
+      <div className="card mb-4 shadow-sm">
+        <div className="card-body">
+          {/* Top labels */}
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <span className="fw-semibold">Your overall preparation progress</span>
+            <span className="fw-semibold text-primary">
+              {completed}/{total} ({pct}%)
+            </span>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="progress" style={{ height: '14px' }}>
+            <div
+              className={barClasses}
+              role="progressbar"
+              style={{ width: `${pct}%` }}
+              aria-valuenow={completed}
+              aria-valuemin="0"
+              aria-valuemax={total}
+            />
+          </div>
+
+          {/* Bottom labels */}
+          <div className="d-flex justify-content-between align-items-center mt-2 small text-muted">
+            <span>{completed} items complete</span>
+            <span>{total - completed} items remaining</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minWidth: 130 }}>
       <div className="progress mb-1" style={{ height: 14 }}>
         {total > 0 && (
           <div
-            className={`progress-bar bg-${color}`}
+            className={barClasses}
             role="progressbar"
             style={{ width: `${pct}%` }}
             aria-valuenow={pct}
