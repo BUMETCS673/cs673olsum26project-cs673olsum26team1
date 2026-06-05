@@ -142,10 +142,10 @@ describe('GET /api/patients', () => {
   });
 
   describe('?search query parameter', () => {
-    test('with no search term, Prisma is called with no arguments', async () => {
+    test('with no search term, Prisma is called with only orderBy', async () => {
       mockFindMany.mockResolvedValue([]);
       await request(app).get('/api/patients');
-      expect(mockFindMany).toHaveBeenCalledWith();
+      expect(mockFindMany).toHaveBeenCalledWith({ orderBy: { createdAt: 'desc' } });
     });
 
     test('search term is passed to Prisma as a name/MRN OR clause', async () => {

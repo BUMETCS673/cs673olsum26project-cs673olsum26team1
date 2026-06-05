@@ -55,7 +55,7 @@ describe('searchDB', () => {
 
       const result = await searchPatients(mockPrisma, null);
 
-      expect(mockPrisma.patient.findMany).toHaveBeenCalledWith();
+      expect(mockPrisma.patient.findMany).toHaveBeenCalledWith({ orderBy: { createdAt: 'desc' } });
       expect(result).toEqual(mockPatients);
     });
 
@@ -88,7 +88,8 @@ describe('searchDB', () => {
               name: expect.objectContaining({ contains: 'john', mode: 'insensitive' })
             })
           ])
-        }
+        },
+        orderBy: { createdAt: 'desc' },
       });
       expect(result).toEqual(searchResults);
     });
@@ -106,7 +107,8 @@ describe('searchDB', () => {
               mrn: expect.objectContaining({ contains: '12345', mode: 'insensitive' })
             })
           ])
-        }
+        },
+        orderBy: { createdAt: 'desc' },
       });
       expect(result).toEqual(searchResults);
     });
