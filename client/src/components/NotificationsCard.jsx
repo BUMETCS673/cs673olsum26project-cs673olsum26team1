@@ -18,11 +18,15 @@ const NotificationsCard = ({ notifications = [], onMarkAsRead }) => {
           notifications.map(n => (
             <li
               key={n.id}
-              className={`list-group-item d-flex justify-content-between align-items-start ${
-                !n.isRead ? 'list-group-item-warning' : ''
-              }`}
+              className="list-group-item d-flex align-items-start"
             >
-              <div>
+              <span
+                className={`rounded-circle d-inline-block flex-shrink-0 mt-1 me-2 ${
+                  n.isRead ? 'bg-secondary' : 'bg-primary'
+                }`}
+                style={{ width: '10px', height: '10px' }}
+              />
+              <div className="flex-grow-1">
                 <p className="mb-1">{n.message}</p>
                 <small className="text-muted">
                   {new Date(n.createdAt).toLocaleString()}
