@@ -545,3 +545,210 @@ describe('PATCH /api/patients/:id/clinical', () => {
     });
   });
 });
+
+// A patient with all clinical fields at their Prisma schema defaults (i.e. brand-new, no specialist yet)
+const makeNewPatient = (overrides = {}) => makePatient({
+  visitType: '',
+  dietitian: 'not required',
+  psychologist: 'not required',
+  endoscopy: 'not required',
+  cardiology: 'not required',
+  sleep: 'not required',
+  barium: 'not required',
+  hematology: 'not required',
+  consult: 'not booked',
+  labs: 'not complete',
+  ...overrides,
+});
+
+describe('PATCH /api/patients/:id/specialist', () => {
+  beforeEach(() => {
+    mockFindUnique.mockReset();
+    mockUpdate.mockReset();
+    mockAuditLogCreate.mockReset();
+  });
+
+  describe('response', () => {
+    test('returns 200 with a success message and patient on success', async () => {
+      mockFindUnique.mockResolvedValue(makeNewPatient());
+      mockUpdate.mockResolvedValue(makeNewPatient({ visitType: 'Bariatric Surgeon' }));
+      mockAuditLogCreate.mockResolvedValue({});
+
+      const res = await request(app)
+        .patch('/api/patients/1/specialist')
+        .send({ specialistChoice: 'Bariatric Surgeon' });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('message', 'Specialist choice saved successfully');
+      expect(res.body).toHaveProperty('patient');
+    });
+
+    test('saves visitType to the database', async () => {
+      mockFindUnique.mockResolvedValue(makeNewPatient());
+      mockUpdate.mockResolvedValue(makeNewPatient({ visitType: 'Bariatric Surgeon' }));
+      mockAuditLogCreate.mockResolvedValue({});
+
+      await request(app)
+        .patch('/api/patients/1/specialist')
+        .send({ specialistChoice: 'Bariatric Surgeon' });
+
+      const updateData = mockUpdate.mock.calls[0][0].data;
+      expect(updateData.visitType).toBe('Bariatric Surgeon');
+    });
+
+    test('creates an audit log entry for the visitType change', async () => {
+      mockFindUnique.mockResolvedValue(makeNewPatient({ visitType: '' }));
+      mockUpdate.mockResolvedValue(makeNewPatient({ visitType: 'Bariatric Surgeon' }));
+      mockAuditLogCreate.mockResolvedValue({});
+
+      await request(app)
+        .patch('/api/patients/1/specialist')
+        .send({ specialistChoice: 'Bariatric Surgeon' });
+
+      expect(mockAuditLogCreate).toHaveBeenCalledWith({
+        data: {
+          patientId: 1,
+          column: 'visitType',
+          oldValue: '',
+          newValue: 'Bariatric Surgeon',
+        },
+      });
+    });
+  });
+
+  describe('clinical field initialization', () => {
+    test('Bariatric Surgeon: initializes all 7 defaulted required fields to not booked', async () => {
+      mockFindUnique.mockResolvedValue(makeNewPatient());
+      mockUpdate.mockResolvedValue(makeNewPatient({ visitType: 'Bariatric Surgeon' }));
+      mockAuditLogCreate.mockResolvedValue({});
+
+      await request(app)
+        .patch('/api/patients/1/specialist')
+        .send({ specialistChoice: 'Bariatric Surgeon' });
+
+      const updateData = mockUpdate.mock.calls[0][0].data;
+      expect(updateData.dietitian).toBe('not booked');
+      expect(updateData.psychologist).toBe('not booked');
+      expect(updateData.endoscopy).toBe('not booked');
+      expect(updateData.cardiology).toBe('not booked');
+      expect(updateData.sleep).toBe('not booked');
+      expect(updateData.barium).toBe('not booked');
+      expect(updateData.hematology).toBe('not booked');
+    });
+
+    test('Endoscopic Obesity Specialist: initializes its 4 defaulted required fields to not booked', async () => {
+      mockFindUnique.mockResolvedValue(makeNewPatient());
+      mockUpdate.mockResolvedValue(makeNewPatient({ visitType: 'Endoscopic Obesity Specialist' }));
+      mockAuditLogCreate.mockResolvedValue({});
+
+      await request(app)
+        .patch('/api/patients/1/specialist')
+        .send({ specialistChoice: 'Endoscopic Obesity Specialist' });
+
+      const updateData = mockUpdate.mock.calls[0][0].data;
+      expect(updateData.dietitian).toBe('not booked');
+      expect(updateData.psychologist).toBe('not booked');
+      expect(updateData.endoscopy).toBe('not booked');
+      expect(updateData.cardiology).toBe('not booked');
+      // sleep, barium, hematology are not required for this specialist — must not be touched
+      expect(updateData).not.toHaveProperty('sleep');
+      expect(updateData).not.toHaveProperty('barium');
+      expect(updateData).not.toHaveProperty('hematology');
+    });
+
+    test('Obesity Medicine Specialist: initializes its 2 defaulted required fields to not booked', async () => {
+      mockFindUnique.mockResolvedValue(makeNewPatient());
+      mockUpdate.mockResolvedValue(makeNewPatient({ visitType: 'Obesity Medicine Specialist' }));
+      mockAuditLogCreate.mockResolvedValue({});
+
+      await request(app)
+        .patch('/api/patients/1/specialist')
+        .send({ specialistChoice: 'Obesity Medicine Specialist' });
+
+      const updateData = mockUpdate.mock.calls[0][0].data;
+      expect(updateData.dietitian).toBe('not booked');
+      expect(updateData.psychologist).toBe('not booked');
+      // endoscopy, cardiology, sleep, barium, hematology are not required — must not be touched
+      expect(updateData).not.toHaveProperty('endoscopy');
+      expect(updateData).not.toHaveProperty('cardiology');
+      expect(updateData).not.toHaveProperty('sleep');
+      expect(updateData).not.toHaveProperty('barium');
+      expect(updateData).not.toHaveProperty('hematology');
+    });
+
+    test('does not overwrite a required field that is already in an active state', async () => {
+      // dietitian is already 'ordered' — should not be reset to 'not booked'
+      mockFindUnique.mockResolvedValue(makeNewPatient({ dietitian: 'ordered', psychologist: 'not required' }));
+      mockUpdate.mockResolvedValue(makeNewPatient({ visitType: 'Obesity Medicine Specialist' }));
+      mockAuditLogCreate.mockResolvedValue({});
+
+      await request(app)
+        .patch('/api/patients/1/specialist')
+        .send({ specialistChoice: 'Obesity Medicine Specialist' });
+
+      const updateData = mockUpdate.mock.calls[0][0].data;
+      expect(updateData).not.toHaveProperty('dietitian');
+      expect(updateData.psychologist).toBe('not booked');
+    });
+
+    test('never sets insurance, labs, or consult (already have non-default-required values)', async () => {
+      mockFindUnique.mockResolvedValue(makeNewPatient());
+      mockUpdate.mockResolvedValue(makeNewPatient({ visitType: 'Bariatric Surgeon' }));
+      mockAuditLogCreate.mockResolvedValue({});
+
+      await request(app)
+        .patch('/api/patients/1/specialist')
+        .send({ specialistChoice: 'Bariatric Surgeon' });
+
+      const updateData = mockUpdate.mock.calls[0][0].data;
+      expect(updateData).not.toHaveProperty('insurance');
+      expect(updateData).not.toHaveProperty('labs');
+      expect(updateData).not.toHaveProperty('consult');
+    });
+
+    test('matches specialist name case-insensitively', async () => {
+      // routingLogic.js returns sentence-case names like 'Bariatric surgeon'
+      mockFindUnique.mockResolvedValue(makeNewPatient());
+      mockUpdate.mockResolvedValue(makeNewPatient({ visitType: 'Bariatric surgeon' }));
+      mockAuditLogCreate.mockResolvedValue({});
+
+      await request(app)
+        .patch('/api/patients/1/specialist')
+        .send({ specialistChoice: 'Bariatric surgeon' });
+
+      const updateData = mockUpdate.mock.calls[0][0].data;
+      // Should still initialize all 7 Bariatric Surgeon required fields
+      expect(updateData.dietitian).toBe('not booked');
+      expect(updateData.sleep).toBe('not booked');
+      expect(updateData.hematology).toBe('not booked');
+    });
+  });
+
+  describe('validation', () => {
+    test('returns 400 when specialistChoice is missing', async () => {
+      const res = await request(app).patch('/api/patients/1/specialist').send({});
+      expect(res.status).toBe(400);
+      expect(res.body).toHaveProperty('error', 'specialistChoice is required');
+    });
+  });
+
+  describe('error handling', () => {
+    test('returns 404 when patient does not exist', async () => {
+      mockFindUnique.mockResolvedValue(null);
+      const res = await request(app)
+        .patch('/api/patients/999/specialist')
+        .send({ specialistChoice: 'Bariatric Surgeon' });
+      expect(res.status).toBe(404);
+      expect(res.body).toHaveProperty('error', 'Patient not found');
+    });
+
+    test('returns 500 when the database throws', async () => {
+      mockFindUnique.mockRejectedValue(new Error('Connection refused'));
+      const res = await request(app)
+        .patch('/api/patients/1/specialist')
+        .send({ specialistChoice: 'Bariatric Surgeon' });
+      expect(res.status).toBe(500);
+      expect(res.body).toHaveProperty('error');
+    });
+  });
+});
