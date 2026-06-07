@@ -4,6 +4,8 @@
 // AI-Assisted Areas: polling logic, useEffect cleanup, notification rendering, token retrieval
 // Human Contributions: integration with AuthContext, route decisions, testing
 // Notes: polling every 30s per BARI-23 acceptance criteria. Token fetched via Firebase getIdToken.
+import AIChatWidget from '../components/AIChatWidget';
+
 
 import { useState, useEffect, useCallback } from 'react';
 import Navbar from '../components/Navbar';
@@ -138,6 +140,14 @@ function PatientPortal() {
           />
         )}
       </div>
+      <AIChatWidget 
+        role="PATIENT"
+        patientContext={{
+          insuranceStatus: patientData?.insurance || patientData?.insuranceStatus || "unknown",
+          assignedSpecialist: patientData?.visitType || patientData?.assignedSpecialist || "not yet assigned",
+          name: user?.name,
+        }}
+      />
     </>
   );
 }

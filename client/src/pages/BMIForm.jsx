@@ -16,7 +16,8 @@ export default function BMIForm() {
   const location = useLocation();
   const { user } = useAuth();
 
-  const patientId = user?.patientId;
+  const patientId = user?.patientId || user?.id;
+  
   const bmiFromCalc = location.state?.bmi;
 
   const [bmi, setBmi] = useState(bmiFromCalc || '');

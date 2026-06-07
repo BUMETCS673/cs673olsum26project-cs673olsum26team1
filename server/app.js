@@ -9,6 +9,9 @@ const authRoutes = require('./routes/auth');
 const patientRoutes = require('./routes/patients');
 const notificationRoutes = require('./routes/notifications');
 
+// AI -route
+const aiRoutes = require('./routes/ai');
+
 const app = express();
 
 app.use(cors({
@@ -25,10 +28,13 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai', aiRoutes);
+
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
+
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });

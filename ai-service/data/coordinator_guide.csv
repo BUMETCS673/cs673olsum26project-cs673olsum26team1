@@ -1,0 +1,9 @@
+question,answer,category
+"How do I update a patient's insurance status?","Navigate to the patient record in the coordinator dashboard, click the insurance status field, select the appropriate status and save. The patient will be automatically notified.","workflow"
+"What does the progress bar show?","The progress bar shows how many of the required clinical checklist items have been completed for a patient out of the total required steps.","dashboard"
+"How do I assign a specialist to a patient?","In the patient record, use the specialist assignment dropdown to select the appropriate specialist type based on the patient's evaluation and BMI profile.","workflow"
+"What clinical fields need to be completed?","The clinical checklist includes psychological evaluation, nutritional counseling, cardiac clearance, sleep study, endocrinology, and documentation of supervised diet attempts.","clinical"
+"How do I create a notification for a patient?","Patient notifications are created automatically when you update insurance or clinical status. Manual notifications can also be sent from the patient record.","notifications"
+"What is the typical pre-auth timeline?","Pre-authorization requests typically take 5-15 business days. Complex cases or appeals may take longer. Track status in the patient record.","insurance"
+
+
