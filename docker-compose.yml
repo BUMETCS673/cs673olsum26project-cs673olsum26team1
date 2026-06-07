@@ -18,7 +18,7 @@ services:
   # ---- Express backend ----
   backend:
     build:
-      context: ./server
+      context: ./code/server
       dockerfile: Dockerfile
     container_name: bariatricpath-backend
     restart: unless-stopped
@@ -37,13 +37,13 @@ services:
     depends_on:
       - db
     volumes:
-      - ./server:/app
+      - ./code/server:/app
       - /app/node_modules
 
   # ---- React frontend ----
   frontend:
     build:
-      context: ./client
+      context: ./code/client
       dockerfile: Dockerfile
     container_name: bariatricpath-frontend
     restart: unless-stopped
@@ -52,7 +52,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./client:/app
+      - ./code/client:/app
       - /app/node_modules
 
 volumes:
