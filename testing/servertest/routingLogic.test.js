@@ -1,4 +1,4 @@
-const { getSpecialistRecommendation } = require('../utils/routingLogic');
+const { getSpecialistRecommendation } = require('../../code/server/utils/routingLogic');
 
 describe('getSpecialistRecommendation', () => {
   test('returns Bariatric surgeon with no alternative if previous surgery is "yes"', () => {

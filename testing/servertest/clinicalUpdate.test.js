@@ -15,13 +15,13 @@ const mockUpdate = jest.fn();
 const mockAuditLogCreate = jest.fn();
 const mockNotificationCreate = jest.fn();
 
-jest.mock('../config/prisma', () => ({
+jest.mock('../../code/server/config/prisma', () => ({
   patient: { findUnique: mockFindUnique, update: mockUpdate },
   auditLog: { create: mockAuditLogCreate },
   notification: { create: mockNotificationCreate },
 }));
 
-jest.mock('../middleware/verifyAuth', () => ({
+jest.mock('../../code/server/middleware/verifyAuth', () => ({
   verifyAuth: (req, res, next) => {
     req.user = { id: 10, name: 'Test Coordinator', email: 'coord@test.com', role: 'COORDINATOR' };
     next();
@@ -29,7 +29,7 @@ jest.mock('../middleware/verifyAuth', () => ({
   requireRole: () => (req, res, next) => next(),
 }));
 
-const patientRouter = require('../routes/patients');
+const patientRouter = require('../../code/server/routes/patients');
 
 const app = express();
 app.use(express.json());

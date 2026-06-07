@@ -5,7 +5,7 @@
 // Human Contributions: I prompted and reviewed all of the generated tests to ensure they accurately reflect the business logic and requirements. 
 // Notes: I'm not very familair with Jest, so this was a good opportunity to learn more about unit tests in Jest. 
 
-const { computeProgress } = require('../../searchDB/calculateProgress');
+const { computeProgress } = require('../../../code/server/searchDB/calculateProgress');
 
 // ---------------------------------------------------------------------------
 // Helpers – build minimal patient objects for each specialist type

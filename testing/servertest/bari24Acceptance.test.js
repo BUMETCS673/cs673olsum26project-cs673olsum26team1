@@ -6,12 +6,12 @@
 // Notes: Acceptance tests for BARI-24 View New Patient Registrations
 
 const request = require('supertest');
-const app     = require('../app');
+const app     = require('../../code/server/app');
 
 jest.setTimeout(15000);
 
 // Mock Prisma so no real database connection is needed
-jest.mock('../config/prisma', () => ({
+jest.mock('../../code/server/config/prisma', () => ({
   user: {
     findUnique: jest.fn(),
     create:     jest.fn(),
@@ -31,14 +31,14 @@ jest.mock('../config/prisma', () => ({
 }));
 
 // Mock verifyAuth so no Firebase token is needed
-jest.mock('../middleware/verifyAuth', () => ({
+jest.mock('../../code/server/middleware/verifyAuth', () => ({
   verifyAuth: (req, res, next) => {
     req.user = { id: 1, name: 'Test Coordinator', role: 'COORDINATOR' };
     next();
   },
 }));
 
-const prisma = require('../config/prisma');
+const prisma = require('../../code/server/config/prisma');
 
 beforeEach(() => {
   jest.clearAllMocks();

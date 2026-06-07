@@ -9,13 +9,13 @@ const request = require('supertest');
 
 const mockVerifyIdToken = jest.fn();
 
-jest.mock('../config/firebase-admin', () => ({
+jest.mock('../../code/server/config/firebase-admin', () => ({
   auth: () => ({
     verifyIdToken: mockVerifyIdToken,
   }),
 }));
 
-jest.mock('../config/prisma', () => {
+jest.mock('../../code/server/config/prisma', () => {
   const mockPrisma = {
     user: {
       findUnique: jest.fn(),
@@ -34,8 +34,8 @@ jest.mock('../config/prisma', () => {
   return mockPrisma;
 });
 
-const app = require('../app');
-const prisma = require('../config/prisma');
+const app = require('../../code/server/app');
+const prisma = require('../../code/server/config/prisma');
 
 describe('Auth Routes', () => {
   beforeEach(() => {

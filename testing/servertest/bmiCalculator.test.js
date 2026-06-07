@@ -1,4 +1,4 @@
-const { calculateBMI } = require('../utils/bmiCalculator');
+const { calculateBMI } = require('../../code/server/utils/bmiCalculator');
 
 describe('BMI Calculator Utilities', () => {
   describe('calculateBMI()', () => {

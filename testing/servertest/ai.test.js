@@ -10,11 +10,11 @@ const request = require('supertest');
 
 const mockVerifyIdToken = jest.fn();
 
-jest.mock('../config/firebase-admin', () => ({
+jest.mock('../../code/server/config/firebase-admin', () => ({
   auth: () => ({ verifyIdToken: mockVerifyIdToken }),
 }));
 
-jest.mock('../config/prisma', () => ({
+jest.mock('../../code/server/config/prisma', () => ({
   user: {
     findUnique: jest.fn(),
   },
@@ -22,8 +22,8 @@ jest.mock('../config/prisma', () => ({
 }));
 
 global.fetch = jest.fn();
-const app = require('../app');
-const prisma = require('../config/prisma');
+const app = require('../../code/server/app');
+const prisma = require('../../code/server/config/prisma');
 
 // Reusable test data
 const VALID_TOKEN = 'fake-valid-token';

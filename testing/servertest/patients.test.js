@@ -16,7 +16,7 @@ const mockAuditLogCreate = jest.fn();
 const mockNotificationCreate = jest.fn();
 const mockAuditLogFindFirst = jest.fn();
 
-jest.mock('../config/prisma', () => ({
+jest.mock('../../code/server/config/prisma', () => ({
   patient: { findMany: mockFindMany, findUnique: mockFindUnique, update: mockUpdate },
   auditLog: { create: mockAuditLogCreate, findFirst: mockAuditLogFindFirst },
   notification: { create: mockNotificationCreate },
@@ -24,7 +24,7 @@ jest.mock('../config/prisma', () => ({
 
 // Bypass auth so tests focus on route/search logic, not Firebase
 // Attaches a mock coordinator user so routes that read req.user work correctly
-jest.mock('../middleware/verifyAuth', () => ({
+jest.mock('../../code/server/middleware/verifyAuth', () => ({
   verifyAuth: (req, res, next) => {
     req.user = { id: 10, name: 'Test Coordinator', email: 'coord@test.com', role: 'COORDINATOR' };
     next();
@@ -32,7 +32,7 @@ jest.mock('../middleware/verifyAuth', () => ({
   requireRole: () => (req, res, next) => next(),
 }));
 
-const patientRouter = require('../routes/patients');
+const patientRouter = require('../../code/server/routes/patients');
 
 const app = express();
 app.use(express.json());

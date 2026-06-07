@@ -12,7 +12,7 @@ const mockNotificationFindMany = jest.fn();
 
 const mockNotificationUpdate = jest.fn();
 
-jest.mock('../config/prisma', () => ({
+jest.mock('../../code/server/config/prisma', () => ({
   notification: {
     create: mockNotificationCreate,
     findMany: mockNotificationFindMany,
@@ -20,7 +20,7 @@ jest.mock('../config/prisma', () => ({
   },
 }));
 
-jest.mock('../middleware/verifyAuth', () => ({
+jest.mock('../../code/server/middleware/verifyAuth', () => ({
   verifyAuth: (req, res, next) => {
     req.user = { id: 10, name: 'Test Coordinator', email: 'coord@test.com', role: 'COORDINATOR' };
     next();
@@ -28,7 +28,7 @@ jest.mock('../middleware/verifyAuth', () => ({
   requireRole: () => (req, res, next) => next(),
 }));
 
-const notificationRouter = require('../routes/notifications');
+const notificationRouter = require('../../code/server/routes/notifications');
 
 const app = express();
 app.use(express.json());
@@ -252,7 +252,7 @@ describe('GET /api/notifications/:patientId', () => {
     const mockNotificationUpdate = jest.fn();
   
     beforeAll(() => {
-      require('../config/prisma').notification.update = mockNotificationUpdate;
+      require('../../code/server/config/prisma').notification.update = mockNotificationUpdate;
     });
   
     beforeEach(() => {

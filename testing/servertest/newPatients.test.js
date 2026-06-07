@@ -7,11 +7,11 @@
 // Newest patients appear first
 
 const request = require('supertest');
-const app     = require('../app');
+const app     = require('../../code/server/app');
 
 // Mock Prisma so we do not need
 // a real database connection
-jest.mock('../config/prisma', () => ({
+jest.mock('../../code/server/config/prisma', () => ({
   patient: {
     findMany: jest.fn(),
     count:    jest.fn(),
@@ -20,7 +20,7 @@ jest.mock('../config/prisma', () => ({
 
 // Mock verifyAuth middleware
 // so we do not need Firebase
-jest.mock('../middleware/verifyAuth',
+jest.mock('../../code/server/middleware/verifyAuth',
   () => ({
     verifyAuth: (req, res, next) => {
       req.user = {
@@ -32,7 +32,7 @@ jest.mock('../middleware/verifyAuth',
   })
 );
 
-const prisma = require('../config/prisma');
+const prisma = require('../../code/server/config/prisma');
 
 // Increase timeout for Docker environment
 jest.setTimeout(15000);
