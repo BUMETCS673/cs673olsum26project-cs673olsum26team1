@@ -240,4 +240,6 @@ Useful psql commands:
 
 The app includes an AI chat widget on the patient portal powered by a Python FastAPI microservice using RAG (Retrieval Augmented Generation). The widget requires an OpenAI API key and the Python service running separately.
 
+> **Note:** The AI service is **not included in the Docker Compose setup** and must be run locally. Containerizing the AI service is planned for iteration 3.
+
 To set up the AI service see `ai-service/README.md` for full instructions.
