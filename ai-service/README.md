@@ -1,12 +1,10 @@
-# BariatricPath AI Service
-```python
 # AI-USAGE SUMMARY
 # Tools: Claude, ChatGPT
-# Overall AI Contribution: ~50%
+# Overall AI Contribution: ~60%
 # AI-Assisted Areas: RAG pipeline, prompt templates
 # Human Contributions: data content, role logic, testing
 # Notes: uses langchain-core modern API
-```
+# BariatricPath AI Service
 
 A Python FastAPI microservice that powers the AI chat assistant for the BariatricPath
 bariatric surgery coordination platform. It uses Retrieval-Augmented Generation (RAG)
@@ -44,17 +42,59 @@ Before you start, make sure you have these installed on your machine:
 > **Important:** Python 3.13 is NOT supported. The `pydantic-core` dependency
 > requires Python 3.11 or 3.12. If you have 3.13, install 3.11 first.
 
-### Install Python 3.11 on Mac
+---
+
+## Installing Python 3.11
+
+### Mac
 
 ```bash
 brew install python@3.11
 ```
 
-### Install Python 3.11 on Ubuntu/Debian
+Verify:
+
+```bash
+python3.11 --version
+```
+
+### Ubuntu / Debian (Linux)
 
 ```bash
 sudo apt update
 sudo apt install python3.11 python3.11-venv
+```
+
+Verify:
+
+```bash
+python3.11 --version
+```
+
+### Windows
+
+Use `winget` and `pyenv-win` to install and manage Python versions:
+
+```powershell
+winget install pyenv-win
+pyenv install 3.11.9
+pyenv local 3.11.9
+```
+
+> After installing via winget, you may need to restart your terminal before
+> the `pyenv` command is available.
+
+Verify:
+
+```powershell
+py -3.11 --version
+```
+
+Then create your virtual environment on Windows using:
+
+```powershell
+py -3.11 -m venv venv
+venv\Scripts\activate
 ```
 
 ---
@@ -69,10 +109,14 @@ ai-service/
 │   └── director_guide.csv         # Program director metrics knowledge base
 ├── chroma_db/                      # Auto-generated — do not commit to Git
 ├── venv/                           # Auto-generated — do not commit to Git
+├── tests/
+│   ├── __init__.py                 # Empty — marks folder as Python package
+│   └── test_main.py                # pytest tests for all FastAPI endpoints
 ├── main.py                         # FastAPI app entry point
 ├── rag.py                          # RAG pipeline, prompts, and memory logic
 ├── load_data.py                    # Script to load CSV data into ChromaDB
 ├── requirements.txt                # Python dependencies
+├── pytest.ini                      # pytest configuration
 ├── Dockerfile                      # Docker configuration
 ├── .env                            # Your secrets — never commit this
 ├── .env.example                    # Template showing required variables
@@ -95,17 +139,17 @@ cd cs673olsum26project-cs673olsum26team1/ai-service
 A virtual environment keeps this project's dependencies isolated from the rest
 of your system. Always activate it before running anything.
 
+**Mac / Linux:**
+
 ```bash
 python3.11 -m venv venv
+source venv/bin/activate
 ```
 
-Activate it:
+**Windows:**
 
-```bash
-# Mac / Linux
-source venv/bin/activate
-
-# Windows
+```powershell
+py -3.11 -m venv venv
 venv\Scripts\activate
 ```
 
@@ -141,7 +185,9 @@ To get an API key:
 5. Copy the key and paste it into your `.env` file
 
 > **Cost note:** This service uses `gpt-4.1-mini`. A typical chat message costs
-> approximately $0.001–0.002. A $5 credit gives you thousands of test messages.
+> approximately $0.001-0.002. A $5 credit gives you thousands of test messages.
+> Only the person running the AI service needs an API key. Teammates do not need
+> their own key unless they are running the service locally themselves.
 
 ### Step 5 — Load the knowledge base into ChromaDB
 
@@ -182,6 +228,82 @@ You should see:
 ```json
 {"status": "ok", "service": "bariatricpath-ai"}
 ```
+
+---
+
+## Running the Tests
+
+The AI service has a full pytest test suite covering all endpoints and error cases.
+Tests use mocks for OpenAI and ChromaDB — no real API calls are made and no
+OpenAI credits are consumed when running tests.
+
+### Install test dependencies
+
+These are already in `requirements.txt` but confirm they are installed:
+
+```bash
+pip install pytest pytest-asyncio httpx
+```
+
+### Run all tests
+
+```bash
+pytest -v
+```
+
+### Expected output
+
+```
+tests/test_main.py::test_health_endpoint PASSED                        [ 11%]
+tests/test_main.py::test_chat_returns_answer_for_patient PASSED        [ 22%]
+tests/test_main.py::test_chat_returns_answer_for_coordinator PASSED    [ 33%]
+tests/test_main.py::test_chat_returns_answer_for_director PASSED       [ 44%]
+tests/test_main.py::test_chat_rejects_empty_question PASSED            [ 55%]
+tests/test_main.py::test_chat_rejects_whitespace_only_question PASSED  [ 66%]
+tests/test_main.py::test_chat_rejects_invalid_role PASSED              [ 77%]
+tests/test_main.py::test_chat_returns_500_when_ai_fails PASSED         [ 88%]
+tests/test_main.py::test_chat_default_role_is_patient PASSED           [100%]
+
+9 passed in 1.67s
+```
+
+### What each test covers
+
+| Test | What it verifies |
+|------|-----------------|
+| `test_health_endpoint` | GET /health always returns status ok |
+| `test_chat_returns_answer_for_patient` | Valid patient question returns an answer |
+| `test_chat_returns_answer_for_coordinator` | COORDINATOR role is passed through correctly |
+| `test_chat_returns_answer_for_director` | PROGRAM_DIRECTOR role is passed through correctly |
+| `test_chat_rejects_empty_question` | Empty question returns 400 |
+| `test_chat_rejects_whitespace_only_question` | Whitespace-only question returns 400 |
+| `test_chat_rejects_invalid_role` | Unknown role returns 400 |
+| `test_chat_returns_500_when_ai_fails` | OpenAI failure returns 500 gracefully |
+| `test_chat_default_role_is_patient` | Missing role defaults to PATIENT |
+
+### How the tests work (no API key needed)
+
+The test suite mocks `get_ai_response` using Python's `unittest.mock.patch`.
+This replaces the real function — which calls OpenAI and ChromaDB — with a
+fake that returns a predictable response instantly. This means:
+
+- Tests run in under 2 seconds
+- No OpenAI API key is needed to run tests
+- Tests are fully deterministic — same result every time
+- No ChromaDB data needs to be loaded
+
+### Express route tests (server side)
+
+The Express proxy route `server/routes/ai.js` also has a Jest test suite
+located at `server/__tests__/ai.test.js`. To run those:
+
+```bash
+cd ../server
+npm test -- --testPathPatterns=ai.test.js
+```
+
+Expected: 13 tests passing covering happy paths, validation, authentication,
+and error handling for the Express-to-Python proxy.
 
 ---
 
@@ -396,32 +518,12 @@ The same RAG pipeline runs for all roles. What changes per role:
 
 | Role | Prompt style | Response length | Knowledge source |
 |------|-------------|-----------------|-----------------|
-| PATIENT | Warm, encouraging | 2–3 sentences | bariatric_program_faq.csv |
+| PATIENT | Warm, encouraging | 2-3 sentences | bariatric_program_faq.csv |
 | COORDINATOR | Professional, direct | 3 sentences or steps | coordinator_guide.csv |
 | PROGRAM_DIRECTOR | Strategic, data-focused | Max 5 bullet points | director_guide.csv |
 
 If a user asks something outside their role's knowledge base, the AI gives a
 helpful general response and suggests contacting the appropriate person.
-
----
-
-## Running with Docker
-
-If you prefer Docker over a local Python environment:
-
-```bash
-# Build the image
-docker build -t bariatricpath-ai .
-
-# Run the container
-docker run -p 8000:8000 --env-file .env bariatricpath-ai
-```
-
-Or using docker-compose from the project root:
-
-```bash
-docker-compose up ai-service
-```
 
 ---
 
@@ -451,6 +553,26 @@ in one place and the AI service stateless.
 
 ---
 
+## Running with Docker
+
+If you prefer Docker over a local Python environment:
+
+```bash
+# Build the image
+docker build -t bariatricpath-ai .
+
+# Run the container
+docker run -p 8000:8000 --env-file .env bariatricpath-ai
+```
+
+Or using docker-compose from the project root:
+
+```bash
+docker-compose up ai-service
+```
+
+---
+
 ## Troubleshooting
 
 **`pydantic-core` build fails during pip install**
@@ -458,10 +580,20 @@ in one place and the AI service stateless.
 You are using Python 3.13. Install Python 3.11 and recreate the venv:
 
 ```bash
+# Mac
 brew install python@3.11
 rm -rf venv
 python3.11 -m venv venv
 source venv/bin/activate
+pip install -r requirements.txt
+
+# Windows
+winget install pyenv-win
+pyenv install 3.11.9
+pyenv local 3.11.9
+# restart terminal, then:
+py -3.11 -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -499,12 +631,16 @@ Then update `AI_SERVICE_URL` in your Express `.env` to `http://localhost:8001`.
 VS Code is using the wrong Python interpreter. Press `Cmd+Shift+P`, type
 `Python: Select Interpreter`, and choose the one inside `ai-service/venv/bin/python3.11`.
 
-**Answers are too long or include markdown asterisks**
+**Answers include markdown asterisks like \*\*bold\*\***
 
-The prompt in `rag.py` controls response length and format. The `PROGRAM_DIRECTOR`
-prompt instructs the model to use plain dashes and a maximum of 5 points. If you
-see `**bold**` formatting in responses, check that the director prompt includes:
-`Use plain text only — no markdown bold or asterisks.`
+The director prompt instructs the model to use plain text only. If you see
+`**bold**` in responses, check that the `PROGRAM_DIRECTOR` prompt in `rag.py`
+includes: `Use plain text only — no markdown bold or asterisks.`
+
+**PatientPortal.jsx merge conflict**
+
+If you see a merge conflict on `PatientPortal.jsx` when pulling from dev,
+accept the incoming changes. The AI widget integration is safe to keep.
 
 ---
 
@@ -532,6 +668,8 @@ see `**bold**` formatting in responses, check that the director prompt includes:
 | python-dotenv | 1.0.1 | Loads .env files |
 | pydantic | 2.10.3 | Data validation for API models |
 | httpx | 0.27.2 | HTTP client |
+| pytest | 8.3.3 | Test framework |
+| pytest-asyncio | 0.24.0 | Async test support |
 
 ---
 
@@ -545,4 +683,9 @@ and re-run `python load_data.py`.
 When modifying prompts in `rag.py`, test all three roles after changes since
 the same function handles all of them.
 
+All Python files must include the AI-USAGE SUMMARY comment block at the top
+per project requirements. Example:
 
+```python
+
+```
