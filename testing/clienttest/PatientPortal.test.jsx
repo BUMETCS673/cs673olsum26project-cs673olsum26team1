@@ -32,8 +32,8 @@ vi.mock('../utils/api', () => ({
   apiRequest: vi.fn(),
 }));
 
-import { apiRequest } from '../utils/api';
-import PatientPortal from '../pages/PatientPortal';
+import { apiRequest } from '../../code/client/src/utils/api';
+import PatientPortal from '../../code/client/src/pages/PatientPortal';
 
 const mockPatientData = {
   id: 1,

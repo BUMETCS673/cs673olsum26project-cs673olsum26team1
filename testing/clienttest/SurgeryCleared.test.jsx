@@ -7,7 +7,7 @@
 
 import { render, screen } from "@testing-library/react";
 import { expect, test } from "vitest";
-import SurgeryCleared from "./SurgeryCleared";
+import SurgeryCleared from "../../code/client/src/components/SurgeryCleared";
 
 test("renders the cleared for surgery message", () => {
   render(<SurgeryCleared />);
