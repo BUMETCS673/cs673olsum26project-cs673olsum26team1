@@ -39,6 +39,18 @@ const mockPatientData = {
   id: 1,
   insuranceStatus: 'clear',
   assignedSpecialist: 'Bariatric Surgeon',
+  assignedCoordinator: 'Jane Coordinator',
+  progress: {
+    completed: 2,
+    total: 5,
+  },
+  checklist: [
+    { field: 'insurance', status: 'complete' },
+    { field: 'labs', status: 'complete' },
+    { field: 'consult', status: 'not complete' },
+    { field: 'dietitian', status: 'in progress' },
+    { field: 'psychologist', status: 'ordered' },
+  ],
 };
 
 const mockNotifications = [
@@ -80,10 +92,44 @@ describe('PatientPortal', () => {
     render(<PatientPortal />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Jane Doe/)).toBeInTheDocument();
-      expect(screen.getByText(/^clear$/i)).toBeInTheDocument();
-      expect(screen.getByText(/Bariatric Surgeon/)).toBeInTheDocument();
+      expect(screen.getByText(/Welcome back, Jane/)).toBeInTheDocument();
+      expect(screen.getByText(/Your appointment checklist for Bariatric Surgeon/i)).toBeInTheDocument();
+      expect(screen.getByText(/Your overall preparation progress/)).toBeInTheDocument();
+      expect(screen.getByText(/2\/5\s*\(40%\)/)).toBeInTheDocument();
+      expect(screen.getByText(/2 items complete/)).toBeInTheDocument();
+      expect(screen.getByText(/3 items remaining/)).toBeInTheDocument();
     });
+  });
+
+  it('renders checklist items and correct status badges', async () => {
+    render(<PatientPortal />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Insurance status')).toBeInTheDocument();
+      expect(screen.getByText('Labs')).toBeInTheDocument();
+      expect(screen.getByText('Initial consultation')).toBeInTheDocument();
+      expect(screen.getByText('Dietitian visits')).toBeInTheDocument();
+      expect(screen.getByText('Psychologist visits')).toBeInTheDocument();
+
+      // Verify status badges are present
+      expect(screen.getByText('Clear')).toBeInTheDocument();
+      expect(screen.getByText('Complete')).toBeInTheDocument();
+      expect(screen.getByText('Not Started')).toBeInTheDocument();
+      expect(screen.getByText('In Progress')).toBeInTheDocument();
+      expect(screen.getByText('Scheduled')).toBeInTheDocument();
+    });
+  });
+
+  it('renders the checklist as read-only with no edit actions', async () => {
+    render(<PatientPortal />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Insurance status')).toBeInTheDocument();
+    });
+
+    // There should not be any select elements or save buttons in the checklist table
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument();
   });
 
   it('renders notifications list', async () => {
@@ -135,34 +181,94 @@ describe('PatientPortal', () => {
     });
   });
 
-//   it('polls notifications every 30 seconds', async () => {
-//     vi.useFakeTimers();
+  it('polls notifications and patient data every 30 seconds', async () => {
+    vi.useFakeTimers();
 
-//     render(<PatientPortal />);
+    render(<PatientPortal />);
 
-//     await waitFor(() => {
-//       expect(screen.getByText('Notifications')).toBeInTheDocument();
-//     });
+    // Resolve initial mount promises
+    await act(async () => {
+      await Promise.resolve();
+    });
 
-//     const callsBefore = apiRequest.mock.calls.filter((call) =>
-//       call[0].includes('notifications')
-//     ).length;
+    const callsBeforeNotifications = apiRequest.mock.calls.filter((call) =>
+      call[0].includes('notifications')
+    ).length;
 
-//     await act(async () => {
-//       vi.advanceTimersByTime(30000);
-//     });
+    const callsBeforePatients = apiRequest.mock.calls.filter((call) =>
+      call[0].includes('patients')
+    ).length;
 
-//     await waitFor(() => {
-//       const callsAfter = apiRequest.mock.calls.filter((call) =>
-//         call[0].includes('notifications')
-//       ).length;
+    // Advance time by 30 seconds to trigger the polling interval
+    await act(async () => {
+      vi.advanceTimersByTime(30000);
+    });
 
-//       expect(callsAfter).toBeGreaterThan(callsBefore);
-//     });
+    // Resolve the promises returned by the polling apiRequest calls
+    await act(async () => {
+      await Promise.resolve();
+    });
 
-//     // Return to real timers before the next test.
-//     vi.useRealTimers();
-//   });
+    const callsAfterNotifications = apiRequest.mock.calls.filter((call) =>
+      call[0].includes('notifications')
+    ).length;
+
+    const callsAfterPatients = apiRequest.mock.calls.filter((call) =>
+      call[0].includes('patients')
+    ).length;
+
+    expect(callsAfterNotifications).toBeGreaterThan(callsBeforeNotifications);
+    expect(callsAfterPatients).toBeGreaterThan(callsBeforePatients);
+
+    vi.useRealTimers();
+  });
+
+  it('updates checklist status and progress bar when polling returns updated data', async () => {
+    vi.useFakeTimers();
+
+    let dynamicPatientData = { ...mockPatientData };
+    
+    apiRequest.mockImplementation((endpoint) => {
+      if (endpoint.includes('patients')) return Promise.resolve(dynamicPatientData);
+      if (endpoint.includes('notifications')) return Promise.resolve(mockNotifications);
+      return Promise.resolve({});
+    });
+
+    render(<PatientPortal />);
+
+    // Resolve initial mount promises
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText(/2\/5\s*\(40%\)/)).toBeInTheDocument();
+
+    // Change patient data to simulate a coordinator update (labs complete -> everything complete, progress 5/5)
+    dynamicPatientData = {
+      ...mockPatientData,
+      progress: {
+        completed: 5,
+        total: 5,
+      },
+      checklist: mockPatientData.checklist.map(item => ({ ...item, status: 'complete' })),
+    };
+
+    // Advance time by 30 seconds to trigger interval
+    await act(async () => {
+      vi.advanceTimersByTime(30000);
+    });
+
+    // Resolve the promises returned by the polling apiRequest calls
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText(/5\/5\s*\(100%\)/)).toBeInTheDocument();
+    expect(screen.getByText(/5 items complete/)).toBeInTheDocument();
+    expect(screen.getByText(/0 items remaining/)).toBeInTheDocument();
+
+    vi.useRealTimers();
+  });
 
   it('shows empty state when no notifications', async () => {
     
@@ -178,4 +284,87 @@ describe('PatientPortal', () => {
       expect(screen.getByText('No notifications yet.')).toBeInTheDocument();
     });
   });
+
+  it('renders need help section with assigned coordinator', async () => {
+    render(<PatientPortal />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Need help?')).toBeInTheDocument();
+      expect(screen.getByText(/Your coordinator will contact you to schedule your next steps/)).toBeInTheDocument();
+      expect(screen.getByText('Assigned coordinator: Jane Coordinator')).toBeInTheDocument();
+    });
+  });
+
+  it('shows no coordinator is assigned text if none returned by backend', async () => {
+    // Override implementation to return patient data without coordinator
+    apiRequest.mockImplementation((endpoint) => {
+      if (endpoint.includes('patients')) {
+        const { assignedCoordinator, ...rest } = mockPatientData;
+        return Promise.resolve(rest);
+      }
+      if (endpoint.includes('notifications')) return Promise.resolve(mockNotifications);
+      return Promise.resolve({});
+    });
+
+    render(<PatientPortal />);
+
+    await waitFor(() => {
+      expect(screen.getByText('No coordinator is assigned.')).toBeInTheDocument();
+    });
+  });
+
+  describe('Surgery Cleared banner', () => {
+    it('shows the banner when all checklist items are complete (progress = 100%)', async () => {
+      apiRequest.mockImplementation((endpoint) => {
+        if (endpoint.includes('patients')) return Promise.resolve({
+          ...mockPatientData,
+          progress: { completed: 7, total: 7 },
+          checklist: mockPatientData.checklist.map(item => ({ ...item, status: 'complete' })),
+        });
+        if (endpoint.includes('notifications')) return Promise.resolve(mockNotifications);
+        return Promise.resolve({});
+      });
+ 
+      render(<PatientPortal />);
+ 
+      await waitFor(() => {
+        expect(screen.getByText('You are cleared for surgery!')).toBeInTheDocument();
+      });
+    });
+ 
+    it('does not show the banner when one or more items are incomplete', async () => {
+      // beforeEach provides mockPatientData with progress 2/5 — no override needed.
+      render(<PatientPortal />);
+ 
+      await waitFor(() => {
+        expect(screen.getByText(/Your overall preparation progress/)).toBeInTheDocument();
+      });
+ 
+      expect(screen.queryByText('You are cleared for surgery!')).not.toBeInTheDocument();
+    });
+ 
+    it('does not show the banner when the checklist is empty (total = 0)', async () => {
+      // completed === total is trivially true when both are 0, so the
+      // total > 0 guard on line 165 must be what prevents the banner.
+      apiRequest.mockImplementation((endpoint) => {
+        if (endpoint.includes('patients')) return Promise.resolve({
+          ...mockPatientData,
+          progress: { completed: 0, total: 0 },
+          checklist: [],
+        });
+        if (endpoint.includes('notifications')) return Promise.resolve(mockNotifications);
+        return Promise.resolve({});
+      });
+ 
+      render(<PatientPortal />);
+ 
+      await waitFor(() => {
+        expect(screen.getByText(/Welcome back, Jane/)).toBeInTheDocument();
+      });
+ 
+      expect(screen.queryByText('You are cleared for surgery!')).not.toBeInTheDocument();
+    });
+  });
+
+
 });

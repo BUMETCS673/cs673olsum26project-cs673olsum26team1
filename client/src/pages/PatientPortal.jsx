@@ -10,8 +10,13 @@ import AIChatWidget from '../components/AIChatWidget';
 import { useState, useEffect, useCallback } from 'react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
+import SurgeryCleared from '../components/SurgeryCleared';
 import { auth } from '../config/firebase';
 import { apiRequest } from '../utils/api';
+import ProgressBar from '../components/ProgressBar';
+import PatientChecklist from '../components/PatientChecklist';
+import NotificationsCard from '../components/NotificationsCard';
+import NeedHelpCard from '../components/NeedHelpCard';
 
 function PatientPortal() {
   const { user } = useAuth();
@@ -37,6 +42,7 @@ function PatientPortal() {
     try {
       const data = await apiRequest(`/patients/${patientId}`);
       setPatientData(data);
+      setError(null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -61,13 +67,19 @@ function PatientPortal() {
     fetchNotifications();
   }, [fetchPatientData, fetchNotifications]);
 
-  // Poll every 30 seconds per BARI-213 acceptance criteria
+  // Poll every 30 seconds per BARI-213 and BARI-18 acceptance criteria
   useEffect(() => {
-    const interval = setInterval(fetchNotifications, 30000);
+    const interval = setInterval(() => {
+      fetchNotifications();
+      fetchPatientData();
+    }, 30000);
     return () => clearInterval(interval);
-  }, [fetchNotifications]);
+  }, [fetchNotifications, fetchPatientData]);
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const isCleared =
+    patientData?.progress &&
+    patientData.progress.completed === patientData.progress.total &&
+    patientData.progress.total > 0;
 
   if (loading) return (
     <>
@@ -83,80 +95,50 @@ function PatientPortal() {
   return (
     <>
       <Navbar />
-      <div className="container mt-4">
-        <h2>Patient Portal</h2>
-        <p className="text-muted">Welcome, {user?.name}.</p>
+      <div className="container mt-4 text-start">
+        <h2>Welcome back, {user?.name ? user.name.split(' ')[0] : ''}</h2>
+        <p className="text-muted fs-5">
+          Your appointment checklist for {patientData?.assignedSpecialist || 'Not assigned yet'}
+        </p>
 
         {error && (
           <div className="alert alert-warning" role="alert">{error}</div>
         )}
 
-        {/* Patient Status Card */}
-        {patientData && (
-          <div className="card mb-4">
-            <div className="card-body">
-              <h5 className="card-title">Your Status</h5>
-              <div className="row">
-                <div className="col-md-6">
-                  <p className="mb-1">
-                    <strong>Insurance:</strong>{' '}
-                    <span className={`badge ${
-                      (patientData.insurance || patientData.insuranceStatus) === 'clear' ? 'bg-success' :
-                      (patientData.insurance || patientData.insuranceStatus) === 'not clear' ? 'bg-danger' :
-                      'bg-warning text-dark'
-                    }`}>
-                      {patientData.insurance || patientData.insuranceStatus || 'Pending'}
-                    </span>
-                  </p>
-                </div>
-                <div className="col-md-6">
-                  <p className="mb-1">
-                    <strong>Specialist:</strong>{' '}
-                    {patientData.visitType || patientData.assignedSpecialist || 'Not assigned yet'}                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+        {isCleared && <SurgeryCleared />}
+
+        {/* Progress Bar Section */}
+        {patientData && patientData.progress && (
+          <ProgressBar
+            completed={patientData.progress.completed}
+            total={patientData.progress.total}
+            alwaysGreen={true}
+            striped={true}
+            animated={true}
+            variant="detailed"
+          />
+        )}
+
+        {/* Checklist Section */}
+        {patientData && patientData.checklist && (
+          <PatientChecklist
+            checklist={patientData.checklist}
+            insuranceStatus={patientData.insuranceStatus}
+          />
         )}
 
         {/* Notifications Section */}
-        <div className="card">
-          <div className="card-header d-flex justify-content-between align-items-center">
-            <strong>Notifications</strong>
-            {unreadCount > 0 && (
-              <span className="badge bg-danger rounded-pill">{unreadCount} new</span>
-            )}
-          </div>
-          <ul className="list-group list-group-flush">
-            {notifications.length === 0 ? (
-              <li className="list-group-item text-muted">No notifications yet.</li>
-            ) : (
-              notifications.map(n => (
-                <li
-                  key={n.id}
-                  className={`list-group-item d-flex justify-content-between align-items-start ${
-                    !n.isRead ? 'list-group-item-warning' : ''
-                  }`}
-                >
-                  <div>
-                    <p className="mb-1">{n.message}</p>
-                    <small className="text-muted">
-                      {new Date(n.createdAt).toLocaleString()}
-                    </small>
-                  </div>
-                  {!n.isRead && (
-                    <button
-                      className="btn btn-sm btn-outline-secondary ms-3 flex-shrink-0"
-                      onClick={() => markAsRead(n.id)}
-                    >
-                      Mark read
-                    </button>
-                  )}
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
+        <NotificationsCard
+          notifications={notifications}
+          onMarkAsRead={markAsRead}
+        />
+
+        {/* Need Help Section */}
+        {patientData && (
+          <NeedHelpCard
+            assignedCoordinator={patientData.assignedCoordinator}
+          />
+        )}
       </div>
       <AIChatWidget 
         role="PATIENT"

@@ -10,6 +10,12 @@ import { useNavigate } from 'react-router-dom';
 import ProgressBar from './ProgressBar';
 import StatusBadge from './StatusBadge';
 
+const isNewPatient = (createdAt) => {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  return new Date(createdAt) >= sevenDaysAgo;
+};
+
 const PatientTableList = ({ patients }) => {
   const navigate = useNavigate();
  // AI-ASSISTED: YES 
@@ -50,7 +56,12 @@ const PatientTableList = ({ patients }) => {
                 style={{ cursor: 'pointer' }}
               >
                 <td className="text-nowrap">{patient.mrn}</td>
-                <td>{patient.name}</td>
+                <td>
+                  {patient.name}
+                  {isNewPatient(patient.createdAt) && (
+                    <span className="badge bg-success ms-2">New</span>
+                  )}
+                </td>
                 <td>{patient.bmi}</td>
                 <td>
                   <StatusBadge type="specialist" value={patient.visitType} />

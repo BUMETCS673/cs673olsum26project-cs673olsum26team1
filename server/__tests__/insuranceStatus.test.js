@@ -124,6 +124,20 @@ describe('PATCH /api/patients/:id/insurance — update', () => {
     expect(res.body.insurance).toBe('self pay');
   });
 
+  test('accepts "in review"', async () => {
+    mockFindUnique.mockResolvedValue(makePatient());
+    mockUpdate.mockResolvedValue(makePatient({ insurance: 'in review' }));
+    mockAuditLogCreate.mockResolvedValue({});
+    mockNotificationCreate.mockResolvedValue({});
+
+    const res = await request(app)
+      .patch('/api/patients/1/insurance')
+      .send({ insurance: 'in review' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.insurance).toBe('in review');
+  });
+
   test('response includes a progress field with completed and total', async () => {
     mockFindUnique.mockResolvedValue(makePatient({ insurance: 'not clear' }));
     mockUpdate.mockResolvedValue(makePatient({ insurance: 'clear' }));
@@ -157,6 +171,7 @@ describe('PATCH /api/patients/:id/insurance — update', () => {
     expect(res.body.error).toContain('clear');
     expect(res.body.error).toContain('not clear');
     expect(res.body.error).toContain('self pay');
+    expect(res.body.error).toContain('in review');
   });
 
   test('returns 404 when the patient does not exist', async () => {

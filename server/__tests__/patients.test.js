@@ -14,10 +14,11 @@ const mockFindUnique = jest.fn();
 const mockUpdate = jest.fn();
 const mockAuditLogCreate = jest.fn();
 const mockNotificationCreate = jest.fn();
+const mockAuditLogFindFirst = jest.fn();
 
 jest.mock('../config/prisma', () => ({
   patient: { findMany: mockFindMany, findUnique: mockFindUnique, update: mockUpdate },
-  auditLog: { create: mockAuditLogCreate },
+  auditLog: { create: mockAuditLogCreate, findFirst: mockAuditLogFindFirst },
   notification: { create: mockNotificationCreate },
 }));
 
@@ -141,10 +142,10 @@ describe('GET /api/patients', () => {
   });
 
   describe('?search query parameter', () => {
-    test('with no search term, Prisma is called with no arguments', async () => {
+    test('with no search term, Prisma is called with only orderBy', async () => {
       mockFindMany.mockResolvedValue([]);
       await request(app).get('/api/patients');
-      expect(mockFindMany).toHaveBeenCalledWith();
+      expect(mockFindMany).toHaveBeenCalledWith({ orderBy: { createdAt: 'desc' } });
     });
 
     test('search term is passed to Prisma as a name/MRN OR clause', async () => {
@@ -205,6 +206,8 @@ describe('GET /api/patients', () => {
 describe('GET /api/patients/:id', () => {
   beforeEach(() => {
     mockFindUnique.mockReset();
+    mockAuditLogFindFirst.mockReset();
+    mockAuditLogFindFirst.mockResolvedValue(null);
   });
 
   describe('response format', () => {
@@ -231,10 +234,49 @@ describe('GET /api/patients/:id', () => {
       expect(res.body.progress).toEqual({ completed: 2, total: 5 });
     });
 
+    test('response includes checklist field with required items status mapped', async () => {
+      mockFindUnique.mockResolvedValue(makePatient({ insurance: 'clear', labs: 'complete' }));
+      const res = await request(app).get('/api/patients/1');
+      expect(res.body).toHaveProperty('checklist');
+      expect(Array.isArray(res.body.checklist)).toBe(true);
+      expect(res.body.checklist).toHaveLength(5);
+      expect(res.body.checklist).toContainEqual({ field: 'insurance', status: 'complete' });
+      expect(res.body.checklist).toContainEqual({ field: 'labs', status: 'complete' });
+      expect(res.body.checklist).toContainEqual({ field: 'consult', status: 'not complete' });
+    });
+
     test('queries prisma with the correct integer id from the URL', async () => {
       mockFindUnique.mockResolvedValue(makePatient({ id: 42 }));
       await request(app).get('/api/patients/42');
       expect(mockFindUnique).toHaveBeenCalledWith({ where: { id: 42 } });
+    });
+
+    test('response includes assignedCoordinator if coordinator audit log exists', async () => {
+      mockFindUnique.mockResolvedValue(makePatient({ id: 1 }));
+      mockAuditLogFindFirst.mockResolvedValue({
+        user: { name: 'Dr. Coordinator Name' },
+      });
+      
+      const res = await request(app).get('/api/patients/1');
+      expect(res.status).toBe(200);
+      expect(res.body.assignedCoordinator).toBe('Dr. Coordinator Name');
+      expect(mockAuditLogFindFirst).toHaveBeenCalledWith({
+        where: {
+          patientId: 1,
+          user: { role: 'COORDINATOR' },
+        },
+        orderBy: { timestamp: 'desc' },
+        include: { user: true },
+      });
+    });
+
+    test('assignedCoordinator is null if no coordinator audit log exists', async () => {
+      mockFindUnique.mockResolvedValue(makePatient({ id: 1 }));
+      mockAuditLogFindFirst.mockResolvedValue(null);
+
+      const res = await request(app).get('/api/patients/1');
+      expect(res.status).toBe(200);
+      expect(res.body.assignedCoordinator).toBeNull();
     });
   });
 
@@ -287,8 +329,8 @@ describe('PATCH /api/patients/:id/insurance', () => {
       expect(typeof res.body.progress.total).toBe('number');
     });
 
-    test('accepts all three valid insurance values', async () => {
-      for (const value of ['clear', 'not clear', 'self pay']) {
+    test('accepts all valid insurance values', async () => {
+      for (const value of ['clear', 'not clear', 'self pay', 'in review']) {
         mockFindUnique.mockResolvedValue(makePatient());
         mockUpdate.mockResolvedValue(makePatient({ insurance: value }));
         mockAuditLogCreate.mockResolvedValue({});
@@ -354,6 +396,7 @@ describe('PATCH /api/patients/:id/insurance', () => {
       expect(res.body.error).toContain('clear');
       expect(res.body.error).toContain('not clear');
       expect(res.body.error).toContain('self pay');
+      expect(res.body.error).toContain('in review');
     });
   });
 
