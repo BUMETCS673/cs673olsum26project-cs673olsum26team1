@@ -8,8 +8,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
@@ -26,14 +27,17 @@ model User {
   role        Role
   createdAt   DateTime   @default(now())
   auditLogs   AuditLog[]
+  patient     Patient?
 }
 
 model Patient {
   id            Int            @id @default(autoincrement())
+  userId        Int?           @unique
   mrn           String         @unique
   name          String
   dateOfBirth   DateTime
-  bmi           Float
+  bmi           Float          @default(0)
+  user          User?          @relation(fields: [userId], references: [id])
   visitType     String         @default("")
   insurance     String         @default("not clear")
   consult       String         @default("not booked")

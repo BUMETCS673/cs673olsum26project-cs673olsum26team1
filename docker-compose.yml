@@ -15,6 +15,25 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+  # ---- Python FastAPI AI microservice ----
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: bariatricpath-ai
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    volumes:
+      # Mount source code for live reload during development
+      - ./ai-service:/app
+      # Persist ChromaDB data between container restarts
+      - ai-chroma-data:/app/chroma_db
+    # No depends_on needed — AI service is independent of DB and backend
+
+
   # ---- Express backend ----
   backend:
     build:
@@ -26,14 +45,19 @@ services:
       - "5001:5001"
     environment:
       DATABASE_URL: "postgresql://app_user:app_pass@db:5432/bariatricpath"
+      DIRECT_URL: "postgresql://app_user:app_pass@db:5432/bariatricpath"
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}
       PORT: 5001
       NODE_ENV: development
       CLIENT_URL: "http://localhost:5173"
+      AI_SERVICE_URL: "http://ai-service:8000"
     depends_on:
       - db
+      - ai-service
     volumes:
       - ./server:/app
       - /app/node_modules
@@ -55,3 +79,4 @@ services:
 
 volumes:
   postgres-data:
+  ai-chroma-data:
