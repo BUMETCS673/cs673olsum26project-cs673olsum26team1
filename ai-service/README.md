@@ -209,6 +209,15 @@ Your AI will now answer from BariatricPath-specific content.
 
 A `chroma_db/` folder will appear. This is your local vector database.
 
+### Step 6 -- After the container starts, reload ChromaDB data:
+```
+  docker-compose exec ai-service python load_data.py
+
+  docker-compose up --build
+
+  docker-compose up ai-service --build
+```
+
 ### Step 6 — Start the service
 
 ```bash
