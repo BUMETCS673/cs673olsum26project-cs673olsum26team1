@@ -1,76 +1,86 @@
 # AI Usage log:
-  # Tool: ChatGPT
+  # Tool: ChatGPT + Claude
   # All code is AI generated and human verified
-  name: Code metrics
-  
-  on:
-    push:
-      branches: ["**"]
-    pull_request:
-      branches: [main]
-  
-  jobs:
-    metrics:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v4
-  
-        - uses: actions/setup-node@v4
-          with:
-            node-version: 20
-  
-        - name: Install root dependencies
-          run: npm ci --silent
-  
-        - name: Count lines of code (cloc)
-          run: |
-            sudo apt-get install -y cloc
-            cloc . \
-              --exclude-dir=node_modules,dist,coverage,.git \
-              --json --out=cloc-report.json
-            echo "=== LOC SUMMARY ==="
-            python3 - <<'EOF'
-            import json
-            with open('cloc-report.json') as f:
-                data = json.load(f)
-            t = data.get('SUM', {})
-            print('Files   :', t.get('nFiles', 0))
-            print('Code    :', t.get('code', 0))
-            print('Comment :', t.get('comment', 0))
-            EOF
-  
-        - name: Count symbols (babel)
-          run: |
-            npm install @babel/parser estree-walker --no-save --silent
-            node scripts/count-symbols.mjs
-  
-        - name: Cyclomatic complexity (ESLint)
-          run: |
-            cd client && npm ci --silent
-            echo "===== Cyclomatic Complexity Report ====="
-            npx eslint src/ --format json \
-              --rule '{"complexity": ["warn", 1]}' | \
-              node -e "
-                const data = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8'));
-                let total = 0, count = 0, max = 0, maxFn = '';
-                data.forEach(f => f.messages.forEach(m => {
-                  const match = m.message.match(/complexity of (\d+)/);
-                  if (match) {
-                    const cc = parseInt(match[1]);
-                    total += cc;
-                    count++;
-                    if (cc > max) { max = cc; maxFn = f.filePath + ':' + m.line; }
-                  }
-                }));
-                console.log('Functions analyzed : ' + count);
-                console.log('Total CC           : ' + total);
-                console.log('Average CC         : ' + (total/count).toFixed(2));
-                console.log('Highest CC         : ' + max + ' (' + maxFn + ')');
-                console.log('Threshold (warn)   : 10');
-              " || true
-  
-        - uses: actions/upload-artifact@v4
-          if: always()
-          with:
-            name: code-metrics
-            path: cloc-report.json
+name: Code metrics
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  metrics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+      - uses: actions/setup-node@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        with:
+          node-version: 20
+
+      - name: Install root dependencies
+        run: npm ci --silent
+        continue-on-error: true          # don't abort if root package.json is absent
+
+      - name: Count lines of code (cloc)
+        run: |
+          sudo apt-get install -y cloc
+          cloc . \
+            --exclude-dir=node_modules,dist,coverage,.git \
+            --json --out=cloc-report.json
+          echo "=== LOC SUMMARY ==="
+          python3 - <<'EOF'
+          import json
+          with open('cloc-report.json') as f:
+              data = json.load(f)
+          t = data.get('SUM', {})
+          print('Files   :', t.get('nFiles', 0))
+          print('Code    :', t.get('code', 0))
+          print('Comment :', t.get('comment', 0))
+          EOF
+
+      - name: Count symbols (babel)
+        run: |
+          npm install @babel/parser estree-walker --no-save --silent
+          node scripts/count-symbols.mjs
+        continue-on-error: true
+
+      - name: Cyclomatic complexity (ESLint)
+        run: |
+          cd client && npm ci --silent
+          echo "===== Cyclomatic Complexity Report ====="
+          npx eslint src/ --format json \
+            --rule '{"complexity": ["warn", 1]}' | \
+            node -e "
+              const data = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8'));
+              let total = 0, count = 0, max = 0, maxFn = '';
+              data.forEach(f => f.messages.forEach(m => {
+                const match = m.message.match(/complexity of (\d+)/);
+                if (match) {
+                  const cc = parseInt(match[1]);
+                  total += cc;
+                  count++;
+                  if (cc > max) { max = cc; maxFn = f.filePath + ':' + m.line; }
+                }
+              }));
+              console.log('Functions analyzed : ' + count);
+              console.log('Total CC           : ' + total);
+              console.log('Average CC         : ' + (total/count).toFixed(2));
+              console.log('Highest CC         : ' + max + ' (' + maxFn + ')');
+              console.log('Threshold (warn)   : 10');
+            " || true
+        continue-on-error: true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        with:
+          name: code-metrics
+          path: cloc-report.json
+          if-no-files-found: warn        # warn instead of error if cloc failed
