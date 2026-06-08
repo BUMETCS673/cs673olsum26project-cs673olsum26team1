@@ -4,6 +4,7 @@ const prisma = require('../config/prisma');
 const { verifyAuth } = require('../middleware/verifyAuth');
 const { getSpecialistRecommendation } = require('../utils/routingLogic');
 const { searchPatients, computeProgress } = require('../searchDB/searchDB');
+const { REQUIRED_ITEMS } = require('../searchDB/calculateProgress');
 const { createAuditEntry } = require('../utils/auditUtils');
 const nodemailer = require('nodemailer');
 
@@ -64,7 +65,6 @@ router.get('/:id', verifyAuth, async (req, res) => {
       return res.status(404).json({ error: 'Patient not found' });
     }
 
-    const { REQUIRED_ITEMS } = require('../searchDB/calculateProgress');
     const progress = computeProgress(patient);
 
     const matchedKey = Object.keys(REQUIRED_ITEMS).find(
@@ -240,9 +240,23 @@ router.patch('/:id/specialist', verifyAuth, async (req, res) => {
       return res.status(404).json({ error: 'Patient not found' });
     }
 
+    // Find which clinical fields are required for this specialist type
+    const matchedKey = Object.keys(REQUIRED_ITEMS).find(
+      (key) => key.toLowerCase() === specialistChoice.toLowerCase()
+    );
+    const requiredFields = REQUIRED_ITEMS[matchedKey] || [];
+
+    // Initialize any required clinical fields still at 'not required' to 'not booked'
+    const updateData = { visitType: specialistChoice };
+    for (const field of requiredFields) {
+      if (field !== 'insurance' && existingPatient[field] === 'not required') {
+        updateData[field] = 'not booked';
+      }
+    }
+
     const updatedPatient = await prisma.patient.update({
       where: { id: parseInt(id) },
-      data: { visitType: specialistChoice },
+      data: updateData,
     });
 
     await prisma.auditLog.create({
