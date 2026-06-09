@@ -10,7 +10,8 @@ To create a web-based clinical evaluation management system that digitizes and c
 - Shaima Nimeri — Team Lead, Requirements Lead, Design/Implementation Lead
 - Fatimah Hassan — Security Lead, Configuration Lead
 - Kolya Gavlisin — Quality Assurance Lead, Design/Implementation Lead
-- Kai Fernandes — Configuration Lead
+- Kai Fernandes — Team Lead, Configuration Lead
+- Jianing Li — Requirements Lead
 
 ## Tech Stack
 | Layer | Technology |
