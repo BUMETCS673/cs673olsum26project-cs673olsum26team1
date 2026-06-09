@@ -44,7 +44,21 @@ git checkout dev
 
 ### Step 2 — Set up environment variables
 
-**Server — copy the example file and fill in your Firebase credentials:**
+**Root `.env` — used by Docker Compose to inject Firebase credentials into the backend container:**
+```bash
+cp .env.example .env
+```
+
+Open `.env` and fill in your Firebase credentials (get them from the team lead):
+```
+FIREBASE_PROJECT_ID="your-firebase-project-id"
+FIREBASE_CLIENT_EMAIL="firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com"
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_KEY_HERE\n-----END PRIVATE KEY-----\n"
+EMAIL_USER="your-email-address@gmail.com"
+EMAIL_PASS="your-email-app-password"
+```
+
+**Server — copy the example file (only needed for running without Docker):**
 ```bash
 cp server/.env.example server/.env
 ```
