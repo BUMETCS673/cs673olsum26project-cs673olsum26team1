@@ -49,14 +49,17 @@ git checkout dev
 cp .env.example .env
 ```
 
-Open `.env` and fill in your Firebase credentials (get them from the team lead):
+Open `.env` and fill in your credentials (get them from the team lead):
 ```
 FIREBASE_PROJECT_ID="your-firebase-project-id"
 FIREBASE_CLIENT_EMAIL="firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com"
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_KEY_HERE\n-----END PRIVATE KEY-----\n"
 EMAIL_USER="your-email-address@gmail.com"
 EMAIL_PASS="your-email-app-password"
+OPENAI_API_KEY="sk-your-openai-api-key"
 ```
+
+> **Note:** `OPENAI_API_KEY` is required for the AI chat service. Without it the AI widget will not work but the rest of the app will run normally.
 
 **Server — copy the example file (only needed for running without Docker):**
 ```bash
@@ -98,9 +101,10 @@ VITE_API_URL="http://localhost:5001/api"
 docker compose up --build
 ```
 
-Wait until you see all three services ready:
+Wait until you see all four services ready:
 ```
 bariatricpath-db        | database system is ready to accept connections
+bariatricpath-ai        | Uvicorn running on http://0.0.0.0:8000
 bariatricpath-backend   | Server running on port 5001
 bariatricpath-frontend  | VITE ready in ...ms
 ```
@@ -251,6 +255,10 @@ Useful psql commands:
 ---
 
 # AI Chat Assistant
+
+The AI service runs as a Docker container (`bariatricpath-ai` on port 8000) and starts automatically with `docker compose up`. It requires an `OPENAI_API_KEY` in the root `.env` file. Without it the AI widget will not respond but the rest of the app works normally.
+
+For full local development setup outside Docker see the instructions below.
 
 ### AI-USAGE SUMMARY
 - Tools: Claude, ChatGPT
