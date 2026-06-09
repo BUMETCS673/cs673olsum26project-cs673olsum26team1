@@ -6,35 +6,18 @@
 // Notes: see below for detailed breakdown of contributions and modifications.
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import ProgressBar from './ProgressBar';
+import StatusBadge from './StatusBadge';
 
-const SPECIALIST_LABELS = {
-  'Not Eligible': 'Not Eligible',
-  'Obesity Medicine Specialist': 'Obesity Med.',
-  'Endoscopic Obesity Specialist': 'Endoscopic',
-  'Bariatric Surgeon': 'Bariatric Surgeon',
-};
-
-const SPECIALIST_COLORS = {
-  'Not Eligible': 'secondary',
-  'Obesity Medicine Specialist': 'info',
-  'Endoscopic Obesity Specialist': 'warning',
-  'Bariatric Surgeon': 'danger',
-};
-
-const INSURANCE_LABELS = {
-  'clear': 'Clear',
-  'not clear': 'Not Clear',
-  'self pay': 'Self Pay',
-};
-
-const INSURANCE_COLORS = {
-  'clear': 'success',
-  'not clear': 'danger',
-  'self pay': 'warning',
+const isNewPatient = (createdAt) => {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  return new Date(createdAt) >= sevenDaysAgo;
 };
 
 const PatientTableList = ({ patients }) => {
+  const navigate = useNavigate();
  // AI-ASSISTED: YES 
 // Tool: Claude Code
 // Prompt Summary: This component was originally part of the coordinator dashboard component. 
@@ -64,26 +47,27 @@ const PatientTableList = ({ patients }) => {
         </thead>
         <tbody>
           {patients.map((patient) => {
-            const specialistLabel = SPECIALIST_LABELS[patient.visitType] ?? patient.visitType;
-            const specialistColor = SPECIALIST_COLORS[patient.visitType] ?? 'secondary';
-            const insuranceLabel = INSURANCE_LABELS[patient.insurance] ?? patient.insurance;
-            const insuranceColor = INSURANCE_COLORS[patient.insurance] ?? 'secondary';
             const progress = patient.progress ?? { completed: 0, total: 0 };
 
             return (
-              <tr key={patient.id}>
+              <tr
+                key={patient.id}
+                onClick={() => navigate(`/coordinator/patients/${patient.id}`)}
+                style={{ cursor: 'pointer' }}
+              >
                 <td className="text-nowrap">{patient.mrn}</td>
-                <td>{patient.name}</td>
+                <td>
+                  {patient.name}
+                  {isNewPatient(patient.createdAt) && (
+                    <span className="badge bg-success ms-2">New</span>
+                  )}
+                </td>
                 <td>{patient.bmi}</td>
                 <td>
-                  <span className={`badge bg-${specialistColor} text-nowrap`}>
-                    {specialistLabel}
-                  </span>
+                  <StatusBadge type="specialist" value={patient.visitType} />
                 </td>
                 <td>
-                  <span className={`badge bg-${insuranceColor} text-nowrap`}>
-                    {insuranceLabel}
-                  </span>
+                  <StatusBadge type="insurance" value={patient.insurance} />
                 </td>
                 <td>
                   <ProgressBar completed={progress.completed} total={progress.total} />

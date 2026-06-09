@@ -13,7 +13,7 @@ const searchPatients = async (prisma, searchQuery, filters = {}) => {
   const hasFilters = specialistType || insuranceStatus;
 
   if (!hasSearch && !hasFilters) {
-    return await prisma.patient.findMany();
+    return await prisma.patient.findMany({ orderBy: { createdAt: 'desc' } });
   }
 
   try {
@@ -33,7 +33,7 @@ const searchPatients = async (prisma, searchQuery, filters = {}) => {
       ];
     }
 
-    return await prisma.patient.findMany({ where });
+    return await prisma.patient.findMany({ where, orderBy: { createdAt: 'desc' } });
   } catch (error) {
     throw new Error(`Patient search failed: ${error.message}`);
   }

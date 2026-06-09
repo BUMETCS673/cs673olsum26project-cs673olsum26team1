@@ -1,0 +1,43 @@
+"This report consists of multiple sheets:
+1. the group iteration progress summary sheet to be filled at the end of each iteration by the team leader, 
+2. the project ontribution sheet to be filled by everyone at the end of the semester, 
+3. the AI Usage Log to be filled by everyone whenever using AI tools
+4. the weekly report sheet, one per teamember member, to be filled in each week. ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+This sheet should be completed by the team leader (or other member in the team) by the end of each iteration. ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+iteration ,Date range,"accomplishment summary (such as user stories/tasks completed/big progress, good practices used, etc)",Technical issues summary,non-technical issues summary,Process improvement/plan,# of user story points completed,# of user story points in progress,# of issues opened,# of issues closed,# of issues remained,Total work time (h) ,Total Individual work time (h),Total group meeting time (h),time for type 0 tasks,time for type 1 tasks,time for type 2 tasks,time for type 3 tasks,time for type 4 tasks,time for type 5 tasks,time for type 6 tasks,time for type 7 tasks,Any other metrics defined in your SPPP -->,Lines of code,File / Class / Method count,Cyclomatic complexity,Test Coverage,# of test cases,test pass rate,Security findings (SAST),Code review turnaround,Stories planned vs completed,Defect rate (defects/KLOC),Defect density per module,Defect resolution time,Person-hours actual vs estimated
+0,05/04-05/14,"Team met 2 times to discuss project deliverables and plan; Assigned roles and iter. 0 tasks; Completed iteration 0 documentation (SPPP, risk management plan, progress report, meeting minutes, presentation); Created user stories and imported them into jira; Configured git and set up repo; Proposed, researched, and reviewed system architecture",None,"- Making sure documents meet course requirements
+- Team disagreeing on backend choice for Ai work
+- Teammates unfamiliar wiht different areas of the tech stack","- Team lead adresses areas that do not meet documentation standards
+- Team will meet to discuss which options are best for AI functionality
+- Team members will research the areas that they are unfamiliar with",N/A,N/A,N/A,N/A,N/A,63.5,53.5,2.5,5,22,2.5,,,13.5,1.5,4,,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A
+1,05/15-5/25,"Got intial application running including frontend, backend, and database; Users can log in/ log out securely; Patients can register, calculate BMI, pick a specialist, and new their next steps in the process; Coordinators can view and search for patients, update patient statuses, and assign adn track specialist recommendations;  Completed 17 user story points (9 stories)","- Github branch mixups
+- Firebase on Fatimah private email
+- Created non protected routes that should hav ebeen protected","- Teammates unfamiliar with specific tools in the tech stack
+- API port mismatch 
+","- team members research areas they are unfamiliar with
+- find long term solution for firebase acces
+- corrected ports in VITE_API_URL
+- team will be more vigilant with checking branches before commits/PRs
+- team will be sure to create protected routes moving forward",17,0,5,0,,100,90.5,3,4.5,3,15,52,7.5,10.5,8.5,5,,14968,52,~3.5 per function,80%,62,87.10%,N/A (SAST planned for Iteration 3),~ 2 days,"Planned: 9
+Completed: 9",0.334 defects/KLOC,"Auth: 1 
+Infrastructure: 1
+Patient routes: 0
+Audit log: 0
+Secrets: 0
+Frontend: 0",1.8 days,"Actual: 90.5 
+Estimated: 55-70"
+2,5/26 - 6/8,"Overall great team communication and delegation of tasks and responsibilities; Completed 24 user story points (9 stories); Patient portal page: Patient checklist automatically updates when coordinator makes changes and patient gets notifications, they can view notifications and mark them as read, when all checklist items are complete a surgey cleared banner is visible, privacy policy disclaimer and consent are shown during registration ; Coordinator dashboard: coordinators can view new patients, patient portal will automatically update when coordinator makes changes to any column status or the checklist, they can update the insurance and clinical order columns for selected patient; Patient can ask AI chatbot about program status","- Test files not matching correct paths for setup
+- Mocks had to be fixed for tests so actual connections were not attempted
+- new patients arent receiving correct checklist","- Patient portal page needed refactoring because it was too long
+- Some work overlapping in user stories","- mocks were fixed
+- Patient portal page was refactored
+- New patient checklist issue was addressed and handled
+- reassessed stories and overlap, will make sure this does happen in the final iteration",24,0,6,3,3,179.5,164.5,3,14.5,4,15.5,58,29,23,5.5,11.5,,21889,109,~4.67 per function,90% (by function),583,99%,N/A (SAST planned for Iteration 3),~20 hours,"Planned: 9
+Completed: 10",0.12 defects/KLOC,"Auth: 0
+Infrastructure: 1
+Patient routes: 0
+Audit log: 0
+Secrets: 0
+Frontend: 2",~1 day,"Actual:
+Estimated: "
+3,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

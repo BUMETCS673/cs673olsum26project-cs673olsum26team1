@@ -52,34 +52,50 @@ router.post(
       });
 
       if (existingUser) {
-        return res.status(409).json({ error: 'User already registered' });
+        return res.status(409).json({
+          error: 'User already registered',
+          hint: 'Please log in instead'
+        });
       }
 
-      const newUser = await prisma.user.create({
-        data: { firebaseUid, name, email, role: 'PATIENT' },
+      const { newUser, newPatient } = await prisma.$transaction(async (tx) => {
+        const createdUser = await tx.user.create({
+          data: {
+            firebaseUid,
+            name,
+            email,
+            role: 'PATIENT',
+          },
+        });
+
+        const mrn = `MRN${String(createdUser.id).padStart(6, '0')}`;
+
+        const createdPatient = await tx.patient.create({
+          data: {
+            userId: createdUser.id,
+            mrn,
+            name,
+            dateOfBirth: new Date(patientDateOfBirth),
+            bmi: 0,
+          },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            userId: createdUser.id,
+            patientId: createdPatient.id,
+            column: 'user.created',
+            oldValue: '',
+            newValue: `User ${email} registered as PATIENT`,
+          },
+        });
+
+        return {
+          newUser: createdUser,
+          newPatient: createdPatient,
+        };
       });
 
-      const mrn = `MRN${String(newUser.id).padStart(6, '0')}`;
-      const newPatient = await prisma.patient.create({
-        data: {
-          userId: newUser.id,
-          mrn,
-          name,
-          // dateOfBirth: new Date(dateOfBirth),
-          dateOfBirth: new Date(patientDateOfBirth),
-          bmi: 0,
-        },
-      });
-
-      await prisma.auditLog.create({
-        data: {
-          userId: newUser.id,
-          patientId: newPatient.id,
-          column: 'user.created',
-          oldValue: '',
-          newValue: `User ${email} registered as PATIENT`,
-        },
-      });
 
       return res.status(201).json({
         id: newUser.id,
@@ -89,6 +105,7 @@ router.post(
         role: newUser.role,
         createdAt: newUser.createdAt,
       });
+
     } catch (error) {
       console.error('Registration error:', error);
       if (error.code === 'auth/id-token-expired') {
@@ -100,7 +117,7 @@ router.post(
       return res.status(500).json({ error: 'Registration failed' });
     }
   }
-);  
+);
 
 // POST /api/auth/login
 // Login and return user role
@@ -125,25 +142,43 @@ router.post(
         where: { firebaseUid },
       });
 
-      
+
       if (!user) {
-        user = await prisma.user.create({
-          data: {
-            firebaseUid,
-            name: googleName || 'New Patient',
-            email,
-            role: 'PATIENT',
-          },
+        const { createdUser } = await prisma.$transaction(async (tx) => {
+          const newUser = await tx.user.create({
+            data: {
+              firebaseUid,
+              name: googleName || 'New Patient',
+              email,
+              role: 'PATIENT',
+            },
+          });
+
+          const mrn = `MRN${String(newUser.id).padStart(6, '0')}`;
+
+          await tx.patient.create({
+            data: {
+              userId: newUser.id,
+              mrn,
+              name: googleName || 'New Patient',
+              dateOfBirth: new Date('2000-01-01'),
+              bmi: 0,
+            },
+          });
+
+          await tx.auditLog.create({
+            data: {
+              userId: newUser.id,
+              column: 'user.created',
+              oldValue: '',
+              newValue: `User ${email} auto-created as PATIENT via Google login`,
+            },
+          });
+
+          return { createdUser: newUser };
         });
 
-        await prisma.auditLog.create({
-          data: {
-            userId: user.id,
-            column: 'user.created',
-            oldValue: '',
-            newValue: `User ${email} auto-created as PATIENT via login`,
-          },
-        });
+        user = createdUser;
       }
 
       // Audit the login event
@@ -156,12 +191,22 @@ router.post(
         },
       });
 
-      return res.status(200).json({
+      const responseData = {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
-      });
+      };
+
+      if (user.role === 'PATIENT') {
+        const patient = await prisma.patient.findUnique({
+          where: { userId: user.id },
+          select: { id: true },
+        });
+        if (patient) responseData.patientId = patient.id;
+      }
+
+      return res.status(200).json(responseData);
     } catch (error) {
       console.error('Login error:', error);
       if (error.code === 'auth/id-token-expired') {

@@ -1,3 +1,10 @@
+// AI-USAGE SUMMARY
+// Tools: ChatGPT
+// Overall AI Contribution: ~25%
+// AI-Assisted Areas: Initial component structure and routing suggestions
+// Human Contributions: UI integration, debugging, Firebase integration, styling adjustments, and testing
+// Notes: Code was adapted to fit BariatricPath authentication and routing requirements.
+
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'react-toastify/dist/ReactToastify.css';
@@ -13,7 +20,9 @@ import PatientPortal from './pages/PatientPortal';
 import BMIForm from './pages/BMIForm';
 import ThankYouPage from './pages/ThankYouPage';
 import CoordinatorDashboard from './pages/CoordinatorDashboard';
+import PatientDetail from './pages/PatientDetail';
 import DirectorDashboard from './pages/DirectorDashboard';
+import PrivacyPolicyPage from './pages/PrivacyPolicy';
 
 function App() {
   return (
@@ -27,6 +36,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/bmi-calculation" element={<BMICalculationPage />} />
           <Route path="/bmi-ineligible" element={<BmiIneligiblePage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 
           {/* Protected routes — one canonical path each */}
           <Route
@@ -58,6 +68,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['COORDINATOR']}>
                 <CoordinatorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/coordinator/patients/:id"
+            element={
+              <ProtectedRoute allowedRoles={['COORDINATOR']}>
+                <PatientDetail />
               </ProtectedRoute>
             }
           />

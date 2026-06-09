@@ -4,6 +4,8 @@ const prisma = require('../config/prisma');
 const { verifyAuth } = require('../middleware/verifyAuth');
 const { getSpecialistRecommendation } = require('../utils/routingLogic');
 const { searchPatients, computeProgress } = require('../searchDB/searchDB');
+const { REQUIRED_ITEMS } = require('../searchDB/calculateProgress');
+const { createAuditEntry } = require('../utils/auditUtils');
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
@@ -53,7 +55,7 @@ router.post('/', async (req, res) => {
 
 // GET /api/patients/:id
 // Get one patient by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', verifyAuth, async (req, res) => {
   try {
     const patient = await prisma.patient.findUnique({
       where: { id: parseInt(req.params.id) },
@@ -63,7 +65,51 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Patient not found' });
     }
 
-    res.json(patient);
+    const progress = computeProgress(patient);
+
+    const matchedKey = Object.keys(REQUIRED_ITEMS).find(
+      (key) => key.toLowerCase() === patient.visitType?.toLowerCase()
+    );
+    const requiredFields = REQUIRED_ITEMS[matchedKey] || [];
+
+    const checklist = requiredFields.map((field) => {
+      let status = patient[field];
+      if (field === 'insurance') {
+        if (patient.insurance === 'clear' || patient.insurance === 'self pay') {
+          status = 'complete';
+        } else {
+          status = 'not complete';
+        }
+      } else {
+        if (status === 'not booked') {
+          status = 'not complete';
+        }
+      }
+      return {
+        field,
+        status: status || 'not complete',
+      };
+    });
+
+    // Find the last coordinator who made an audit log entry for this patient
+    const lastAuditLog = await prisma.auditLog.findFirst({
+      where: {
+        patientId: patient.id,
+        user: { role: 'COORDINATOR' },
+      },
+      orderBy: { timestamp: 'desc' },
+      include: { user: true },
+    });
+    const assignedCoordinator = lastAuditLog?.user?.name || null;
+
+    res.json({
+      ...patient,
+      insuranceStatus: patient.insurance,
+      assignedSpecialist: patient.visitType,
+      progress,
+      checklist,
+      assignedCoordinator,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -71,21 +117,83 @@ router.get('/:id', async (req, res) => {
 
 // PATCH /api/patients/:id/insurance
 // Coordinator updates insurance status
-router.patch('/:id/insurance', async (req, res) => {
+router.patch('/:id/insurance', verifyAuth, async (req, res) => {
   try {
-    const { id } = req.params;
-    res.json({ message: `Update insurance for patient ${id} route working` });
+    const patientId = parseInt(req.params.id);
+    const { insurance } = req.body;
+
+    const VALID_VALUES = ['clear', 'not clear', 'self pay', 'in review'];
+    if (!insurance || !VALID_VALUES.includes(insurance)) {
+      return res.status(400).json({ error: `insurance must be one of: ${VALID_VALUES.join(', ')}` });
+    }
+
+    const existing = await prisma.patient.findUnique({ where: { id: patientId } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    const updated = await prisma.patient.update({
+      where: { id: patientId },
+      data: { insurance },
+    });
+
+    await createAuditEntry(prisma, patientId, 'insurance', existing.insurance, insurance);
+
+    await prisma.notification.create({
+      data: {
+        patientId,
+        message: `Your insurance status has been updated to "${insurance}" by ${req.user.name}.`,
+        isRead: false,
+      },
+    });
+
+    res.json({ ...updated, progress: computeProgress(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // PATCH /api/patients/:id/clinical
-// Coordinator updates clinical order columns
-router.patch('/:id/clinical', async (req, res) => {
+// Coordinator updates a clinical order column
+router.patch('/:id/clinical', verifyAuth, async (req, res) => {
   try {
-    const { id } = req.params;
-    res.json({ message: `Update clinical column for patient ${id} route working` });
+    const patientId = parseInt(req.params.id);
+    const { column, value } = req.body;
+
+    const VALID_COLUMNS = [
+      'consult', 'labs', 'hematology', 'nephrology', 'dietitian',
+      'psychologist', 'endoscopy', 'barium', 'cardiology', 'colonoscopy', 'sleep',
+    ];
+
+    if (!column || !VALID_COLUMNS.includes(column)) {
+      return res.status(400).json({ error: `column must be one of: ${VALID_COLUMNS.join(', ')}` });
+    }
+
+    if (value === undefined || value === null || value === '') {
+      return res.status(400).json({ error: 'value is required' });
+    }
+
+    const existing = await prisma.patient.findUnique({ where: { id: patientId } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    const updated = await prisma.patient.update({
+      where: { id: patientId },
+      data: { [column]: value },
+    });
+
+    await createAuditEntry(prisma, patientId, column, existing[column], value);
+
+    await prisma.notification.create({
+      data: {
+        patientId,
+        message: `Your ${column} status has been updated to "${value}" by ${req.user.name}.`,
+        isRead: false,
+      },
+    });
+
+    res.json({ ...updated, progress: computeProgress(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -132,9 +240,23 @@ router.patch('/:id/specialist', verifyAuth, async (req, res) => {
       return res.status(404).json({ error: 'Patient not found' });
     }
 
+    // Find which clinical fields are required for this specialist type
+    const matchedKey = Object.keys(REQUIRED_ITEMS).find(
+      (key) => key.toLowerCase() === specialistChoice.toLowerCase()
+    );
+    const requiredFields = REQUIRED_ITEMS[matchedKey] || [];
+
+    // Initialize any required clinical fields still at 'not required' to 'not booked'
+    const updateData = { visitType: specialistChoice };
+    for (const field of requiredFields) {
+      if (field !== 'insurance' && existingPatient[field] === 'not required') {
+        updateData[field] = 'not booked';
+      }
+    }
+
     const updatedPatient = await prisma.patient.update({
       where: { id: parseInt(id) },
-      data: { visitType: specialistChoice },
+      data: updateData,
     });
 
     await prisma.auditLog.create({
