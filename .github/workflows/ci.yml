@@ -13,17 +13,16 @@ name: CI — Tests and Linting
 
 on:
   push:
-    branches: [ "**" ]
+    branches: ["**"]
   pull_request:
-    branches: [ "**" ]
+    branches: ["**"]
   workflow_dispatch:
 
 jobs:
-
-  # ── SERVER TESTS ─────────────────────────────────────────────
   server-tests:
     name: Server Tests (Jest + Supertest)
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,8 +30,8 @@ jobs:
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
           cache-dependency-path: server/package-lock.json
 
       - name: Install dependencies
@@ -44,8 +43,6 @@ jobs:
         run: npm test
         env:
           NODE_ENV: test
-          # Fake values — tests mock Firebase and Prisma
-          # No real DB or Firebase connection is made
           DATABASE_URL: postgresql://fake:fake@localhost:5432/fake
           FIREBASE_PROJECT_ID: fake-project
           FIREBASE_CLIENT_EMAIL: fake@fake.com
@@ -79,17 +76,17 @@ jobs:
             Ws4prmduCAAeHJ+1vlFG/E0=
             -----END PRIVATE KEY-----
 
-      - name: Post test summary
+      - name: Post server test summary
         if: always()
         run: |
-          echo "##  Server Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "## Server Test Results" >> $GITHUB_STEP_SUMMARY
           echo "Jest + Supertest suite executed for Express routes" >> $GITHUB_STEP_SUMMARY
           echo "Covers: auth, patients, notifications, AI proxy route" >> $GITHUB_STEP_SUMMARY
 
-  # ── CLIENT TESTS ─────────────────────────────────────────────
   client-tests:
     name: Client Tests (Vitest)
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -97,8 +94,8 @@ jobs:
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
           cache-dependency-path: client/package-lock.json
 
       - name: Install dependencies
@@ -111,17 +108,17 @@ jobs:
         env:
           VITE_API_URL: http://localhost:5001/api
 
-      - name: Post test summary
+      - name: Post client test summary
         if: always()
         run: |
-          echo "## 🎨 Client Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "## Client Test Results" >> $GITHUB_STEP_SUMMARY
           echo "Vitest suite executed for React components" >> $GITHUB_STEP_SUMMARY
           echo "Covers: PatientPortal, StatusBadge, AIChatWidget" >> $GITHUB_STEP_SUMMARY
 
-  # ── AI SERVICE TESTS ──────────────────────────────────────────
   ai-service-tests:
     name: AI Service Tests (pytest)
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -129,8 +126,8 @@ jobs:
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: "pip"
           cache-dependency-path: ai-service/requirements.txt
 
       - name: Install dependencies
@@ -141,20 +138,20 @@ jobs:
         working-directory: ai-service
         run: pytest -v
         env:
-          # Fake key — tests mock OpenAI, no API credits consumed
           OPENAI_API_KEY: fake-key-for-testing
 
-      - name: Post test summary
+      - name: Post AI service test summary
         if: always()
         run: |
           echo "## AI Service Test Results" >> $GITHUB_STEP_SUMMARY
           echo "pytest suite executed for FastAPI endpoints" >> $GITHUB_STEP_SUMMARY
           echo "Covers: health, chat endpoint, all roles, validation, errors" >> $GITHUB_STEP_SUMMARY
 
-  # ── ESLINT ────────────────────────────────────────────────────
   lint:
     name: ESLint Code Quality
     runs-on: ubuntu-latest
+    continue-on-error: true
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -162,8 +159,8 @@ jobs:
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
           cache-dependency-path: client/package-lock.json
 
       - name: Install dependencies
@@ -173,19 +170,18 @@ jobs:
       - name: Run ESLint
         working-directory: client
         run: npm run lint
-        continue-on-error: true
-        # continue-on-error so lint warnings don't block the team
 
       - name: Post lint summary
         if: always()
         run: |
-          echo "##  ESLint Results" >> $GITHUB_STEP_SUMMARY
+          echo "## ESLint Results" >> $GITHUB_STEP_SUMMARY
           echo "ESLint executed on client React/JSX source" >> $GITHUB_STEP_SUMMARY
 
-  # ── NPM AUDIT ─────────────────────────────────────────────────
   npm-audit:
     name: npm Dependency Audit
     runs-on: ubuntu-latest
+    continue-on-error: true
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -193,7 +189,7 @@ jobs:
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Audit server dependencies
         working-directory: server
@@ -203,14 +199,12 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           npm audit --audit-level=high >> $GITHUB_STEP_SUMMARY 2>&1 || true
           echo '```' >> $GITHUB_STEP_SUMMARY
-        continue-on-error: true
 
       - name: Audit client dependencies
         working-directory: client
         run: |
           npm ci
-          echo "##  Client Dependency Audit" >> $GITHUB_STEP_SUMMARY
+          echo "## Client Dependency Audit" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           npm audit --audit-level=high >> $GITHUB_STEP_SUMMARY 2>&1 || true
           echo '```' >> $GITHUB_STEP_SUMMARY
-        continue-on-error: true
