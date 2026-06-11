@@ -1,0 +1,78 @@
+
+# AI-USAGE SUMMARY
+# Tools: Claude, ChatGPT
+# Overall AI Contribution: ~40%
+# AI-Assisted Areas: workflow structure, matrix config, Python support
+# Human Contributions: language selection, severity decisions
+# Notes: scans both JavaScript (React+Express) and Python (AI service)
+
+name: CodeQL Security Analysis
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+  # Run every Monday at 2AM — catches new CVEs even without code changes
+  schedule:
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    name: Analyze Code Security (${{ matrix.language }})
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Required for CodeQL to upload results to GitHub Security tab
+      actions: read
+      contents: read
+      packages: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Run two parallel scans — one for JS, one for Python
+        # They run at the same time to save total pipeline time
+        language: [ 'javascript', 'python' ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # CodeQL needs to know what language it is scanning
+      # before it reads the code
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # 'security-extended' includes more security queries than default
+          queries: security-extended
+
+      # For JavaScript/Python, CodeQL can analyze without compiling
+      # Autobuild handles any build steps needed
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      # Run the actual security analysis
+      # Results appear in GitHub → Security → Code scanning alerts
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+      - name: Post CodeQL summary
+        if: always()
+        run: |
+          echo "##  CodeQL Analysis — ${{ matrix.language }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### What CodeQL checked:" >> $GITHUB_STEP_SUMMARY
+          echo "- SQL/NoSQL injection vulnerabilities" >> $GITHUB_STEP_SUMMARY
+          echo "- Cross-Site Scripting (XSS) risks" >> $GITHUB_STEP_SUMMARY
+          echo "- Path traversal vulnerabilities" >> $GITHUB_STEP_SUMMARY
+          echo "- Insecure authentication patterns" >> $GITHUB_STEP_SUMMARY
+          echo "- Hardcoded credentials" >> $GITHUB_STEP_SUMMARY
+          echo "- Unsafe data flows across files" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View results: GitHub → Security → Code scanning alerts" >> $GITHUB_STEP_SUMMARY
