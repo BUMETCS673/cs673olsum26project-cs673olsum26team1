@@ -12,8 +12,10 @@
 name: BariatricPath — OWASP ZAP DAST Scan
 
 on:
+  push:
+    branches: ["feature/**", "dev", "main"]
   pull_request:
-    branches: [ "**" ]
+    branches: ["**"]
   workflow_dispatch:
 
 jobs:
@@ -40,48 +42,36 @@ jobs:
       - name: Verify service is responding
         run: curl -f http://localhost:8000/health || (docker logs ai-service-zap && exit 1)
 
-      - name: Run ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
-        with:
-          target: 'http://localhost:8000'
-          cmd_options: '-a'
-          fail_action: false
+      - name: Run OWASP ZAP baseline scan and generate reports
+        run: |
+          docker run --network host \
+            -v "$(pwd):/zap/wrk/:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t http://127.0.0.1:8000 \
+            -r zap-report.html \
+            -J zap-report.json \
+            -w zap-report.md \
+            -a || true
 
-      - name: Post ZAP scan summary
+      - name: Confirm ZAP report files
         if: always()
         run: |
-          echo "## OWASP ZAP DAST Scan" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "ZAP baseline scan executed against the running AI service" >> $GITHUB_STEP_SUMMARY
-          echo "Target: http://localhost:8000 (/health endpoint)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Checked for:" >> $GITHUB_STEP_SUMMARY
-          echo "- Missing security headers (CSP, X-Frame-Options, etc.)" >> $GITHUB_STEP_SUMMARY
-          echo "- Server information disclosure" >> $GITHUB_STEP_SUMMARY
-          echo "- Cookie security flags" >> $GITHUB_STEP_SUMMARY
-          echo "- Common injection points" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Full report available as workflow artifact." >> $GITHUB_STEP_SUMMARY
-
-      - name: Stop container
-        if: always()
-        run: docker stop ai-service-zap || true
-
-      - name: Locate ZAP report
-        if: always()
-        run: |
-          echo "Searching for ZAP report files..."
-          find . -iname "*report*" -type f 2>/dev/null || true
+          echo "Listing ZAP reports..."
           ls -la
+          find . -maxdepth 2 -iname "zap-report*" -type f || true
 
-      - name: Upload ZAP report
+      - name: Upload ZAP reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: zap-report
           path: |
-            report_html.html
-            zap_scan_report.html
-            *.html
+            zap-report.html
+            zap-report.json
+            zap-report.md
           if-no-files-found: warn
-        continue-on-error: true
+
+      - name: Stop container
+        if: always()
+        run: docker stop ai-service-zap || true
