@@ -1,3 +1,9 @@
+// AI-USAGE SUMMARY
+// Tools: Claude
+// Overall AI Contribution: ~10%
+// AI-Assisted Areas: Make sure the boostrap styling is comsistent and fix syntax errors
+// Human Contributions: core component structure, styling, and testing
+// Notes: This component was created to display a read-only banner on the Director Dashboard, indicating that the user has view-only access to patient data.
 import React from "react";
 
 function ReadOnlyBanner() {
