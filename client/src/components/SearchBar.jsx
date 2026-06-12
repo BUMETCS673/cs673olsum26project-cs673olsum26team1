@@ -3,7 +3,7 @@
 // Overall AI Contribution: ~90%
 // AI-Assisted Areas: Initial code generation, component structure, UI elements, 
 // event handling, debounce, and state management.
-// Human Contributions: Providing the business loggic and modularizing the search bar 
+// Human Contributions: Providing the business logic and modularizing the search bar 
 // as its own component. Originally, all of this was in the coordinator dashboard.
 // Notes: see below for detailed breakdown of contributions and modifications.
 
@@ -13,7 +13,7 @@ import InsuranceFilter from './InsuranceFilter';
 import PatientTableList from './PatientTableList';
 import {apiRequest} from '../utils/api';
 
-const SearchBar = () => {
+const SearchBar = ({ onPatientClick, disableClick = false }) => {
         // AI-ASSISTED: YES 
 // Tool: Claude Code
 // Prompt Summary: My prompt included the user story, subtasks, implementation requirements, and acceptance tests for the coordinator dashboard, 
@@ -93,7 +93,7 @@ const SearchBar = () => {
           {hasActiveFilters ? 'No patients match your filters.' : 'No patients found.'}
         </p>
       ) : (
-        <PatientTableList patients={patients} />
+        <PatientTableList patients={patients} onPatientClick={onPatientClick} disableClick={disableClick} />
       )}
     </>
   );

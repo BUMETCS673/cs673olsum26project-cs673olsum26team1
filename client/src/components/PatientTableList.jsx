@@ -16,7 +16,7 @@ const isNewPatient = (createdAt) => {
   return new Date(createdAt) >= sevenDaysAgo;
 };
 
-const PatientTableList = ({ patients }) => {
+const PatientTableList = ({ patients, onPatientClick, disableClick = false }) => {
   const navigate = useNavigate();
  // AI-ASSISTED: YES 
 // Tool: Claude Code
@@ -28,6 +28,10 @@ const PatientTableList = ({ patients }) => {
 // Verification: 
 // - Manually tested the component in the coordinator dashboard to ensure it renders correctly and updates the patient table as expected.
 // Confidence: High
+  const handleRowClick = (patientId) => {
+    if (disableClick) return;
+    onPatientClick ? onPatientClick(patientId) : navigate(`/coordinator/patients/${patientId}`);
+  };
     if (patients.length === 0) {
     return null;
   }
@@ -52,8 +56,8 @@ const PatientTableList = ({ patients }) => {
             return (
               <tr
                 key={patient.id}
-                onClick={() => navigate(`/coordinator/patients/${patient.id}`)}
-                style={{ cursor: 'pointer' }}
+                onClick={() => handleRowClick(patient.id)}
+                style={{ cursor: disableClick ? 'default' : 'pointer' }}
               >
                 <td className="text-nowrap">{patient.mrn}</td>
                 <td>
