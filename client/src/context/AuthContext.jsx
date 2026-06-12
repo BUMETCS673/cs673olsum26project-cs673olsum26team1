@@ -13,13 +13,9 @@ const refreshUser = async () => {
     try {
       const dbUser = await apiRequest('/auth/me');
       setUser(dbUser);
-  
       return dbUser;
     } catch (error) {
       console.error('refreshUser failed:', error);
-  
-      setUser(null);
-  
       return null;
     }
   };
