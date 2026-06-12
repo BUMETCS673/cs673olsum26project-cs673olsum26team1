@@ -11,6 +11,7 @@
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import AIChatWidget from '../components/AIChatWidget';
+import ReadOnlyBanner from '../components/ReadOnlyBanner';
 
 
 function DirectorDashboard() {
@@ -18,6 +19,7 @@ function DirectorDashboard() {
   return (
     <>
       <Navbar />
+      <ReadOnlyBanner />
       <div className="container mt-4">
         <h2>Program Director Dashboard</h2>
         <p>Welcome, {user?.name}. Your role is: {user?.role}</p>
