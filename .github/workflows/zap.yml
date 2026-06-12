@@ -1,0 +1,85 @@
+# OWASP ZAP — Dynamic Application Security Testing (DAST)
+
+# AI-USAGE SUMMARY
+# Tools: Claude, ChatGPT
+# Overall AI Contribution: ~45%
+# AI-Assisted Areas: workflow structure, service startup, ZAP config
+# Human Contributions: target selection (unauthenticated endpoints only),
+#   rationale for scope
+# Notes: scans AI service /health endpoint — full backend/frontend DAST
+#   requires Firebase+DB which is out of scope for CI environment
+
+name: OWASP ZAP DAST Scan
+
+on:
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+jobs:
+  zap-scan:
+    name: ZAP Baseline Scan (AI Service)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create temp env for AI service
+        run: |
+          echo "OPENAI_API_KEY=fake-key-for-scan" > ai-service/.env
+
+      - name: Build AI service image
+        run: docker build -t bariatricpath-ai:zap ./ai-service
+
+      # Start the container in the background so ZAP can attack it
+      - name: Run AI service container
+        run: |
+          docker run -d --name ai-service-zap -p 8000:8000 bariatricpath-ai:zap
+          # Give the FastAPI app a few seconds to start
+          sleep 10
+
+      - name: Verify service is responding
+        run: curl -f http://localhost:8000/health || (docker logs ai-service-zap && exit 1)
+
+      # ZAP baseline scan — passive scan, safe for CI
+      # Checks for missing security headers, info disclosure,
+      # cookie issues, server version exposure etc.
+      - name: Run ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://localhost:8000'
+          # -a includes all alerts, not just default rules
+          cmd_options: '-a'
+          # Don't fail the pipeline yet — review findings first
+          # it can be changed later on
+          fail_action: false
+
+      - name: Post ZAP scan summary
+        if: always()
+        run: |
+          echo "##  OWASP ZAP DAST Scan" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "ZAP baseline scan executed against the running AI service" >> $GITHUB_STEP_SUMMARY
+          echo "Target: http://localhost:8000 (/health endpoint)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Checked for:" >> $GITHUB_STEP_SUMMARY
+          echo "- Missing security headers (CSP, X-Frame-Options, etc.)" >> $GITHUB_STEP_SUMMARY
+          echo "- Server information disclosure" >> $GITHUB_STEP_SUMMARY
+          echo "- Cookie security flags" >> $GITHUB_STEP_SUMMARY
+          echo "- Common injection points" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Full report available as workflow artifact." >> $GITHUB_STEP_SUMMARY
+
+      - name: Stop container
+        if: always()
+        run: docker stop ai-service-zap || true
+
+      # Upload the full ZAP HTML report as a downloadable artifact
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: report_html.html
+        continue-on-error: true
