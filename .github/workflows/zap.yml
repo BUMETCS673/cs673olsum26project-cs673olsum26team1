@@ -32,33 +32,25 @@ jobs:
       - name: Build AI service image
         run: docker build -t bariatricpath-ai:zap ./ai-service
 
-      # Start the container in the background so ZAP can attack it
       - name: Run AI service container
         run: |
           docker run -d --name ai-service-zap -p 8000:8000 bariatricpath-ai:zap
-          # Give the FastAPI app a few seconds to start
           sleep 10
 
       - name: Verify service is responding
         run: curl -f http://localhost:8000/health || (docker logs ai-service-zap && exit 1)
 
-      # ZAP baseline scan — passive scan, safe for CI
-      # Checks for missing security headers, info disclosure,
-      # cookie issues, server version exposure etc.
       - name: Run ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: 'http://localhost:8000'
-          # -a includes all alerts, not just default rules
           cmd_options: '-a'
-          # Don't fail the pipeline yet — review findings first
-          # it can be changed later on
           fail_action: false
 
       - name: Post ZAP scan summary
         if: always()
         run: |
-          echo "##  OWASP ZAP DAST Scan" >> $GITHUB_STEP_SUMMARY
+          echo "## OWASP ZAP DAST Scan" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "ZAP baseline scan executed against the running AI service" >> $GITHUB_STEP_SUMMARY
           echo "Target: http://localhost:8000 (/health endpoint)" >> $GITHUB_STEP_SUMMARY
@@ -75,14 +67,21 @@ jobs:
         if: always()
         run: docker stop ai-service-zap || true
 
-      # Upload the full ZAP HTML report as a downloadable artifact
+      - name: Locate ZAP report
+        if: always()
+        run: |
+          echo "Searching for ZAP report files..."
+          find . -iname "*report*" -type f 2>/dev/null || true
+          ls -la
+
       - name: Upload ZAP report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: zap-report
           path: |
-                *.html
-                *.json
-                *.md
+            report_html.html
+            zap_scan_report.html
+            *.html
+          if-no-files-found: warn
         continue-on-error: true
