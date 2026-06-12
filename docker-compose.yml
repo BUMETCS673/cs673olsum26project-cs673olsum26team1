@@ -53,7 +53,7 @@ services:
       EMAIL_PASS: ${EMAIL_PASS}
       PORT: 5001
       NODE_ENV: development
-      CLIENT_URL: "http://localhost:5173"
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
       AI_SERVICE_URL: "http://ai-service:8000"
     depends_on:
       - db
