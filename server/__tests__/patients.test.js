@@ -556,7 +556,7 @@ const makeNewPatient = (overrides = {}) => makePatient({
   sleep: 'not required',
   barium: 'not required',
   hematology: 'not required',
-  consult: 'not booked',
+  consult: 'not complete',
   labs: 'not complete',
   ...overrides,
 });
@@ -627,13 +627,13 @@ describe('PATCH /api/patients/:id/specialist', () => {
         .send({ specialistChoice: 'Bariatric Surgeon' });
 
       const updateData = mockUpdate.mock.calls[0][0].data;
-      expect(updateData.dietitian).toBe('not booked');
-      expect(updateData.psychologist).toBe('not booked');
-      expect(updateData.endoscopy).toBe('not booked');
-      expect(updateData.cardiology).toBe('not booked');
-      expect(updateData.sleep).toBe('not booked');
-      expect(updateData.barium).toBe('not booked');
-      expect(updateData.hematology).toBe('not booked');
+      expect(updateData.dietitian).toBe('not complete');
+      expect(updateData.psychologist).toBe('not complete');
+      expect(updateData.endoscopy).toBe('not complete');
+      expect(updateData.cardiology).toBe('not complete');
+      expect(updateData.sleep).toBe('not complete');
+      expect(updateData.barium).toBe('not complete');
+      expect(updateData.hematology).toBe('not complete');
     });
 
     test('Endoscopic Obesity Specialist: initializes its 4 defaulted required fields to not booked', async () => {
@@ -646,10 +646,10 @@ describe('PATCH /api/patients/:id/specialist', () => {
         .send({ specialistChoice: 'Endoscopic Obesity Specialist' });
 
       const updateData = mockUpdate.mock.calls[0][0].data;
-      expect(updateData.dietitian).toBe('not booked');
-      expect(updateData.psychologist).toBe('not booked');
-      expect(updateData.endoscopy).toBe('not booked');
-      expect(updateData.cardiology).toBe('not booked');
+      expect(updateData.dietitian).toBe('not complete');
+      expect(updateData.psychologist).toBe('not complete');
+      expect(updateData.endoscopy).toBe('not complete');
+      expect(updateData.cardiology).toBe('not complete');
       // sleep, barium, hematology are not required for this specialist — must not be touched
       expect(updateData).not.toHaveProperty('sleep');
       expect(updateData).not.toHaveProperty('barium');
@@ -666,8 +666,8 @@ describe('PATCH /api/patients/:id/specialist', () => {
         .send({ specialistChoice: 'Obesity Medicine Specialist' });
 
       const updateData = mockUpdate.mock.calls[0][0].data;
-      expect(updateData.dietitian).toBe('not booked');
-      expect(updateData.psychologist).toBe('not booked');
+      expect(updateData.dietitian).toBe('not complete');
+      expect(updateData.psychologist).toBe('not complete');
       // endoscopy, cardiology, sleep, barium, hematology are not required — must not be touched
       expect(updateData).not.toHaveProperty('endoscopy');
       expect(updateData).not.toHaveProperty('cardiology');
@@ -677,7 +677,7 @@ describe('PATCH /api/patients/:id/specialist', () => {
     });
 
     test('does not overwrite a required field that is already in an active state', async () => {
-      // dietitian is already 'ordered' — should not be reset to 'not booked'
+      // dietitian is already 'ordered' — should not be reset to 'not complete'
       mockFindUnique.mockResolvedValue(makeNewPatient({ dietitian: 'ordered', psychologist: 'not required' }));
       mockUpdate.mockResolvedValue(makeNewPatient({ visitType: 'Obesity Medicine Specialist' }));
       mockAuditLogCreate.mockResolvedValue({});
@@ -688,7 +688,7 @@ describe('PATCH /api/patients/:id/specialist', () => {
 
       const updateData = mockUpdate.mock.calls[0][0].data;
       expect(updateData).not.toHaveProperty('dietitian');
-      expect(updateData.psychologist).toBe('not booked');
+      expect(updateData.psychologist).toBe('not complete');
     });
 
     test('never sets insurance, labs, or consult (already have non-default-required values)', async () => {
@@ -718,9 +718,9 @@ describe('PATCH /api/patients/:id/specialist', () => {
 
       const updateData = mockUpdate.mock.calls[0][0].data;
       // Should still initialize all 7 Bariatric Surgeon required fields
-      expect(updateData.dietitian).toBe('not booked');
-      expect(updateData.sleep).toBe('not booked');
-      expect(updateData.hematology).toBe('not booked');
+      expect(updateData.dietitian).toBe('not complete');
+      expect(updateData.sleep).toBe('not complete');
+      expect(updateData.hematology).toBe('not complete');
     });
   });
 
