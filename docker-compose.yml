@@ -77,6 +77,20 @@ services:
       - ./client:/app
       - /app/node_modules
 
+  # ---- Nginx reverse proxy (HTTPS) ----
+  nginx:
+    image: nginx:alpine
+    container_name: bariatricpath-nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /root/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+
 volumes:
   postgres-data:
   ai-chroma-data:
