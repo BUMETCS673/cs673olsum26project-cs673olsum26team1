@@ -68,7 +68,7 @@ const PatientMetrics = () => {
       label: 'Not eligible',
       value: notEligible,
       sub: 'BMI below 27',
-      valueClass: '',
+      valueClass: 'text-secondary',
     },
   ];
 

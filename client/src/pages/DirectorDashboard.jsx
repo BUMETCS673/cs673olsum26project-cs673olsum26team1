@@ -22,7 +22,7 @@ function DirectorDashboard() {
         <h2>Program Director Dashboard</h2>
         <p className="text-muted">Pipeline overview — all patients across the program</p>
         <PatientMetrics />
-        <SearchBar disableClick />
+        <SearchBar disableClick enableSort />
       </div>
       <AIChatWidget
         role="PROGRAM_DIRECTOR"

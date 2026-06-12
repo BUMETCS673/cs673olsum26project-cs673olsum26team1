@@ -13,7 +13,7 @@ import InsuranceFilter from './InsuranceFilter';
 import PatientTableList from './PatientTableList';
 import {apiRequest} from '../utils/api';
 
-const SearchBar = ({ onPatientClick, disableClick = false }) => {
+const SearchBar = ({ onPatientClick, disableClick = false, enableSort = false }) => {
         // AI-ASSISTED: YES 
 // Tool: Claude Code
 // Prompt Summary: My prompt included the user story, subtasks, implementation requirements, and acceptance tests for the coordinator dashboard, 
@@ -29,6 +29,7 @@ const SearchBar = ({ onPatientClick, disableClick = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [specialistType, setSpecialistType] = useState('');
   const [insuranceStatus, setInsuranceStatus] = useState('');
+  const [sortBy, setSortBy] = useState('progress_desc');
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -63,8 +64,32 @@ const SearchBar = ({ onPatientClick, disableClick = false }) => {
 
   const hasActiveFilters = searchTerm.trim() || specialistType || insuranceStatus;
 
+  // Sorting logic applied on the fetched patients array
+  const sortedPatients = [...patients].sort((a, b) => {
+    if (sortBy === 'name_asc') {
+      return a.name.localeCompare(b.name);
+    }
+    if (sortBy === 'bmi_desc') {
+      return (b.bmi || 0) - (a.bmi || 0);
+    }
+
+    const getProgressPct = (p) => {
+      const total = p.progress?.total || 0;
+      return total > 0 ? (p.progress.completed || 0) / total : 0;
+    };
+
+    if (sortBy === 'progress_desc') {
+      return getProgressPct(b) - getProgressPct(a);
+    }
+    if (sortBy === 'progress_asc') {
+      return getProgressPct(a) - getProgressPct(b);
+    }
+    return 0;
+  });
+
   return (
     <>
+      {/* Row 1: Filters (Spacious) */}
       <div className="row g-2 mb-3 align-items-end" style={{ maxWidth: 900 }}>
         <div className="col-sm-5">
           <input
@@ -93,7 +118,32 @@ const SearchBar = ({ onPatientClick, disableClick = false }) => {
           {hasActiveFilters ? 'No patients match your filters.' : 'No patients found.'}
         </p>
       ) : (
-        <PatientTableList patients={patients} onPatientClick={onPatientClick} disableClick={disableClick} />
+        <>
+          {/* Row 2: Patient count (Left) & Sort controls (Right) */}
+          <div className="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <div className="text-muted small" data-testid="patient-count">
+              Showing {patients.length} {patients.length === 1 ? 'patient' : 'patients'}
+            </div>
+            {enableSort && (
+              <div className="d-flex align-items-center gap-2 mt-2 mt-sm-0">
+                <span className="text-muted small text-nowrap">Sort by:</span>
+                <select
+                  className="form-select form-select-sm"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  aria-label="Sort patients"
+                  style={{ width: 'auto', minWidth: 200 }}
+                >
+                  <option value="progress_desc">Progress: highest first</option>
+                  <option value="progress_asc">Progress: lowest first</option>
+                  <option value="name_asc">Name: A to Z</option>
+                  <option value="bmi_desc">BMI: highest first</option>
+                </select>
+              </div>
+            )}
+          </div>
+          <PatientTableList patients={sortedPatients} onPatientClick={onPatientClick} disableClick={disableClick} />
+        </>
       )}
     </>
   );

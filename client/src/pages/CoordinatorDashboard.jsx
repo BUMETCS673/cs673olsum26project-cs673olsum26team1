@@ -8,7 +8,7 @@ const CoordinatorDashboard = () => (
     <Navbar />
     <div className="container mt-4">
       <h2>Coordinator Portal</h2>
-      <SearchBar />
+      <SearchBar enableSort />
     </div>
     <AIChatWidget
       role="COORDINATOR"
