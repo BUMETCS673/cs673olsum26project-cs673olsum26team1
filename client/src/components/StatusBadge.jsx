@@ -34,6 +34,7 @@ const INSURANCE_COLORS = {
 
 const CHECKLIST_LABELS = {
   'not required': 'Not Required',
+  'not booked':   'Not Started',
   'not complete': 'Not Started',
   'ordered':      'Scheduled',
   'in progress':  'In Progress',
@@ -42,6 +43,7 @@ const CHECKLIST_LABELS = {
 
 const CHECKLIST_COLORS = {
   'not required': 'secondary',
+  'not booked':   'danger',
   'not complete': 'danger',
   'ordered':      'primary',
   'in progress':  'warning',
@@ -53,8 +55,11 @@ const StatusBadge = ({ type, value }) => {
   let color = 'secondary';
 
   if (type === 'specialist') {
-    label = SPECIALIST_LABELS[value] ?? value;
-    color = SPECIALIST_COLORS[value] ?? 'secondary';
+    const key = Object.keys(SPECIALIST_LABELS).find(
+      (k) => k.toLowerCase() === (value ?? '').toLowerCase()
+    );
+    label = key ? SPECIALIST_LABELS[key] : (value ?? '');
+    color = key ? SPECIALIST_COLORS[key] : 'secondary';
   }
 
   if (type === 'insurance') {
