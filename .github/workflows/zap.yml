@@ -42,8 +42,10 @@ jobs:
       - name: Verify service is responding
         run: curl -f http://localhost:8000/health || (docker logs ai-service-zap && exit 1)
 
-      - name: Create reports folder
-        run: mkdir -p zap-reports
+      - name: Create reports folder with open permissions
+        run: |
+          mkdir -p zap-reports
+          chmod -R 777 zap-reports
 
       - name: Run OWASP ZAP baseline scan and generate reports
         run: |
@@ -70,3 +72,7 @@ jobs:
           name: zap-report
           path: zap-reports/
           if-no-files-found: warn
+
+      - name: Stop container
+        if: always()
+        run: docker stop ai-service-zap || true
