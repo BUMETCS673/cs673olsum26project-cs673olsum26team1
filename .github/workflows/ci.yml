@@ -9,7 +9,7 @@
 # Human Contributions: project paths, test commands, stack decisions
 # Notes: covers Node (Jest), React (Vitest), Python (pytest)
 
-name: CI — Tests and Linting
+name: BariatricPath — CI Tests and Linting
 
 on:
   push:

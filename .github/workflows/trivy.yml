@@ -9,7 +9,7 @@
 # Human Contributions: Dockerfile paths, env var handling, stack decisions
 # Notes: scans backend, frontend, and AI service containers separately
 
-name: Trivy Container and Secret Scanning
+name: BariatricPath — Trivy Container and Secret Scanning
 
 on:
   push:

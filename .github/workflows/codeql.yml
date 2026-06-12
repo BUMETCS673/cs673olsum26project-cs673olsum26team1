@@ -6,7 +6,7 @@
 # Human Contributions: language selection, severity decisions
 # Notes: scans both JavaScript (React+Express) and Python (AI service)
 
-name: CodeQL Security Analysis
+name: BariatricPath — CodeQL Security Analysis
 
 on:
   push:

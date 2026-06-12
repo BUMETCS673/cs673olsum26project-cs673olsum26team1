@@ -9,7 +9,7 @@
 # Notes: scans AI service /health endpoint — full backend/frontend DAST
 #   requires Firebase+DB which is out of scope for CI environment
 
-name: OWASP ZAP DAST Scan
+name: BariatricPath — OWASP ZAP DAST Scan
 
 on:
   pull_request:
@@ -81,5 +81,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: zap-report
-          path: report_html.html
+          path: |
+                *.html
+                *.json
+                *.md
         continue-on-error: true
