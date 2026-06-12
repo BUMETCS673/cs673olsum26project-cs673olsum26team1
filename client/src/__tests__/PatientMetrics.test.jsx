@@ -59,7 +59,6 @@ describe('PatientMetrics', () => {
   it('renders correct insurance cleared count', async () => {
     render(<PatientMetrics />);
     await waitFor(() => expect(screen.getByText('Insurance cleared')).toBeInTheDocument());
-    
     const card = screen.getByText('Insurance cleared').closest('.border');
     expect(within(card).getByText('2')).toBeInTheDocument();
   });
@@ -92,5 +91,13 @@ describe('PatientMetrics', () => {
   it('calls apiRequest with /patients', async () => {
     render(<PatientMetrics />);
     await waitFor(() => expect(apiRequest).toHaveBeenCalledWith('/patients'));
+  });
+
+  it('renders all zeros correctly when no patients exist', async () => {
+    apiRequest.mockResolvedValue([]);
+    render(<PatientMetrics />);
+    await waitFor(() => expect(screen.getByText('Total patients')).toBeInTheDocument());
+    expect(screen.getByText('0 new this week')).toBeInTheDocument();
+    expect(screen.getByText('0% of all patients')).toBeInTheDocument();
   });
 });

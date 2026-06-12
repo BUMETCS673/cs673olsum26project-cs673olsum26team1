@@ -9,10 +9,16 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import DirectorDashboard from '../pages/DirectorDashboard';
 
-// Mock child components to isolate DirectorDashboard rendering
+let searchBarProps = {};
+
 vi.mock('../components/Navbar', () => ({ default: () => <div data-testid="navbar" /> }));
 vi.mock('../components/ReadOnlyBanner', () => ({ default: () => <div data-testid="read-only-banner" /> }));
-vi.mock('../components/SearchBar', () => ({ default: () => <div data-testid="search-bar" /> }));
+vi.mock('../components/SearchBar', () => ({
+  default: (props) => {
+    searchBarProps = props;
+    return <div data-testid="search-bar" />;
+  },
+}));
 vi.mock('../components/PatientMetrics', () => ({ default: () => <div data-testid="patient-metrics" /> }));
 vi.mock('../components/AIChatWidget', () => ({ default: () => <div data-testid="ai-chat-widget" /> }));
 
@@ -31,6 +37,10 @@ const renderDirectorDashboard = () =>
   );
 
 describe('DirectorDashboard', () => {
+  beforeEach(() => {
+    searchBarProps = {};
+  });
+
   it('renders the page heading', () => {
     renderDirectorDashboard();
     expect(screen.getByText('Program Director Dashboard')).toBeInTheDocument();
@@ -40,7 +50,6 @@ describe('DirectorDashboard', () => {
     renderDirectorDashboard();
     expect(screen.getByText('Pipeline overview — all patients across the program')).toBeInTheDocument();
   });
-
 
   it('renders Navbar', () => {
     renderDirectorDashboard();
@@ -65,5 +74,17 @@ describe('DirectorDashboard', () => {
   it('renders AIChatWidget', () => {
     renderDirectorDashboard();
     expect(screen.getByTestId('ai-chat-widget')).toBeInTheDocument();
+  });
+
+  it('passes disableClick to SearchBar so directors cannot navigate to patient detail', () => {
+    renderDirectorDashboard();
+    expect(searchBarProps.disableClick).toBe(true);
+  });
+
+  it('does not render any edit or update controls', () => {
+    renderDirectorDashboard();
+    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /update/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument();
   });
 });
