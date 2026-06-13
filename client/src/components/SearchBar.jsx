@@ -29,7 +29,7 @@ const SearchBar = ({ onPatientClick, disableClick = false, enableSort = false })
   const [searchTerm, setSearchTerm] = useState('');
   const [specialistType, setSpecialistType] = useState('');
   const [insuranceStatus, setInsuranceStatus] = useState('');
-  const [sortBy, setSortBy] = useState('progress_desc');
+  const [sortBy, setSortBy] = useState('date_desc');
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -66,11 +66,20 @@ const SearchBar = ({ onPatientClick, disableClick = false, enableSort = false })
 
   // Sorting logic applied on the fetched patients array
   const sortedPatients = [...patients].sort((a, b) => {
+    if (sortBy === 'date_desc') {
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    }
     if (sortBy === 'name_asc') {
       return a.name.localeCompare(b.name);
     }
+    if (sortBy === 'name_desc') {
+      return b.name.localeCompare(a.name);
+    }
     if (sortBy === 'bmi_desc') {
       return (b.bmi || 0) - (a.bmi || 0);
+    }
+    if (sortBy === 'bmi_asc') {
+      return (a.bmi || 0) - (b.bmi || 0);
     }
 
     const getProgressPct = (p) => {
@@ -134,10 +143,13 @@ const SearchBar = ({ onPatientClick, disableClick = false, enableSort = false })
                   aria-label="Sort patients"
                   style={{ width: 'auto', minWidth: 200 }}
                 >
+                  <option value="date_desc">Newest registered</option>
                   <option value="progress_desc">Progress: highest first</option>
                   <option value="progress_asc">Progress: lowest first</option>
                   <option value="name_asc">Name: A to Z</option>
+                  <option value="name_desc">Name: Z to A</option>
                   <option value="bmi_desc">BMI: highest first</option>
+                  <option value="bmi_asc">BMI: lowest first</option>
                 </select>
               </div>
             )}
