@@ -118,8 +118,13 @@ function LoginPage() {
           </Form.Group>
 
           <Form.Group className="mb-4">
-            <label className="auth-form-label">Password</label>
-            <div className="password-field">
+            <div className="d-flex justify-content-between align-items-center">
+                <label className="auth-form-label">Password</label>
+                <Link to="/forgot-password" className="auth-forgot-link" tabIndex={-1}>
+                  Forgot password?
+                </Link>
+             </div>           
+               <div className="password-field">
               <Form.Control
                 type={showPassword ? 'text' : 'password'}
                 name="password" value={formData.password}

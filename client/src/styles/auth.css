@@ -133,3 +133,14 @@
     color: #94a3b8;
     margin-top: 0.3rem;
   }
+
+  /* forgot password  */
+  .auth-forgot-link {
+  font-size: 0.85rem;
+  color: var(--bs-primary, #0d6efd);
+  text-decoration: none;
+}
+
+.auth-forgot-link:hover {
+  text-decoration: underline;
+}

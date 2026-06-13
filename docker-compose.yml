@@ -31,7 +31,6 @@ services:
       - ./ai-service:/app
       # Persist ChromaDB data between container restarts
       - ai-chroma-data:/app/chroma_db
-    # No depends_on needed — AI service is independent of DB and backend
 
 
   # ---- Express backend ----
