@@ -99,8 +99,8 @@ const SearchBar = ({ onPatientClick, disableClick = false, enableSort = false })
   return (
     <>
       {/* Row 1: Filters (Spacious) */}
-      <div className="row g-2 mb-3 align-items-end" style={{ maxWidth: 900 }}>
-        <div className="col-sm-5">
+      <div className="row g-2 mb-3 align-items-end">
+        <div className="col-sm-4">
           <input
             type="search"
             className="form-control"
@@ -113,7 +113,7 @@ const SearchBar = ({ onPatientClick, disableClick = false, enableSort = false })
         <div className="col-sm-4">
           <SpecialistFilter value={specialistType} onChange={setSpecialistType} />
         </div>
-        <div className="col-sm-3">
+        <div className="col-sm-4">
           <InsuranceFilter value={insuranceStatus} onChange={setInsuranceStatus} />
         </div>
       </div>
