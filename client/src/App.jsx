@@ -22,6 +22,8 @@ import CoordinatorDashboard from './pages/CoordinatorDashboard';
 import PatientDetail from './pages/PatientDetail';
 import DirectorDashboard from './pages/DirectorDashboard';
 import PrivacyPolicyPage from './pages/PrivacyPolicy';
+import ForgotPasswordPage from './pages/ForgotPassword';
+
 
 function App() {
   return (
@@ -32,6 +34,7 @@ function App() {
           {/* Public routes */}
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/bmi-calculation" element={<BMICalculationPage />} />
           <Route path="/bmi-ineligible" element={<BmiIneligiblePage />} />
