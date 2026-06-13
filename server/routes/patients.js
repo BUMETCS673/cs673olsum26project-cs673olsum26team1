@@ -316,7 +316,7 @@ router.post('/:id/submit', verifyAuth, async (req, res) => {
         select: { email: true },
       });
 
-      if (user?.email) {
+      if (user?.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         try {
           await transporter.sendMail({
             from: process.env.EMAIL_USER,
