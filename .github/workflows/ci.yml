@@ -1,0 +1,211 @@
+# CI Pipeline — BariatricPath
+# Runs tests for all three services on every push and PR
+# Foundation of the pipeline — everything else builds on top of this
+#
+# AI-USAGE SUMMARY
+# Tools: Claude, ChatGPT
+# Overall AI Contribution: ~45%
+# AI-Assisted Areas: workflow structure, caching, env variables
+# Human Contributions: project paths, test commands, stack decisions
+# Notes: covers Node (Jest), React (Vitest), Python (pytest)
+
+name: BariatricPath — CI Tests and Linting
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch:
+
+jobs:
+  server-tests:
+    name: Server Tests (Jest + Supertest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Run Jest tests
+        working-directory: server
+        run: npm test
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://fake:fake@localhost:5432/fake
+          FIREBASE_PROJECT_ID: fake-project
+          FIREBASE_CLIENT_EMAIL: fake@fake.com
+          FIREBASE_PRIVATE_KEY: |
+            -----BEGIN PRIVATE KEY-----
+            MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDFbd5sUnkg8GvP
+            A4YWG6cBm/nmyu1CjfbMK9EH36MbMilccVue4qlswImAnab8aZMvJCAjBnTHOHFC
+            eOCvNiDtk97As+i/MdlSLThHQMJP0DT22BJ4go08M3dcbbBGQDtJoJu8cvbgpOcF
+            vDcYr2SpYOHuYppZyw9a22pdbOMYQKLwloJ6v71KDwPN0GvDSn0iXPpUu6s+XfJB
+            hWWx7tkEG5+DbBVvq5SqRynkYmy9BXyhBGw10uXKMy8TBFFtUT5FxCA9jXMEJX1l
+            UH32DMun6eFyo6ZYraDhW0aFU5I6zpT+gYGNwcaBuUwVJguInqyvyhtFPieaCiPj
+            LtMGZjizAgMBAAECggEAO131Y0dNiz0gfgiGOoGoL5Cyjdb5j2jXDMAkRCTYjCYC
+            T/z6WwW3gq9G6bj+bKpmiudnDoEzfnCXhjCJB8bUEfzEH9g5pbycp9xXLv3nME7g
+            jlWdAEXpqG+lddK6DfXknhhAnGNJn3WWzp+xRagAMfqjFabq2RN5k42lJ2DFzRWj
+            dMMA/aO3WC6GtFaMthucWF1wCxb9o6KrGWNBLe15XNa+MiyQdOJzLv4NoSuRz2Db
+            4XFSh/JZjjLVZeS7HkH6EvsDSb9eTRqPFpMJnK9QRVhbkj4bbinfHEJSoo4ERBC6
+            XyRGPFnML8gtWvO2BCWQ+Yg2X6jbZfPa38g6WcEmgQKBgQDhFUXm4cfuSJORmJSf
+            suUbvW2LcvOMEYFDVgluFNC8Jr3k1SoukIpoVUWCz3bJ+qqKskl/Pv20DajPCu7q
+            z+orybq0MTsp2V7DVznSDCxy05bbzCBtuMtaWpo8YVGIygzYXrSh8oHEEd5TWaBS
+            m7W+SDeE/pgf9M5XhA487PejwQKBgQDgjC9XxEtjcoaKlFu6BmOo61Kl1kw/7bz2
+            4qwWxm5qQcRQL+4HOYEeY0D1l50EyOTIJtvRQ+6LeroAuajQkF9CvnspZeGOJwlx
+            SBax8dcjLxEBpEGmfjjaMtFr+OXMW+T5TbtsLe+oUM3FjIxs/7mrw1VuC/E+NQvG
+            gTMVMl3pcwKBgC3of9xqmrPAO9ELdOzpuQ8iYNB7fq9H9rx8NOot9rEZmcutqq/a
+            rVBAbDAVDp59sQEfAhyhBXAPBSpNiZN9Gr8ZoyoTjISpoElpZhKwhvRYscFc7hRT
+            B68DIchE9TNYOqx7DI6nfs418sm/UxLmTXhlFGXc47xI2zlAZwMINi5BAoGBALMi
+            wuYWwDne9Lx7bM30KO9qhK2uT3g0tiqTXMxyk0WLoAyEoDT9SCew8PK8eFSH3BRd
+            A8JnmleFmfvYIXf5pTV+9oxpLc8VD3BjHU/qakI0WzHfE0y6p6pTHkUv9EvbB8ln
+            nNzJrMavZ+lwndqbDEmd9HptZpDFCtba3aDMZKVHAoGANcsGmwiYZ3mLIoGj5PQx
+            hsrKbIfrEN5o8ctEAxVUz7hrmBmd9Veutrmv8syt48fLpxqc88GPkMBl4tlWRmQV
+            nSgmMxINg4p5lnSXF68T8RgPu5k3tc9PcQv5UMZwsJ8pnuhsdAhu+rZBTdOShFWF
+            Ws4prmduCAAeHJ+1vlFG/E0=
+            -----END PRIVATE KEY-----
+
+      - name: Post server test summary
+        if: always()
+        run: |
+          echo "## Server Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "Jest + Supertest suite executed for Express routes" >> $GITHUB_STEP_SUMMARY
+          echo "Covers: auth, patients, notifications, AI proxy route" >> $GITHUB_STEP_SUMMARY
+
+  client-tests:
+    name: Client Tests (Vitest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Run Vitest
+        working-directory: client
+        run: npm test
+        env:
+          VITE_API_URL: http://localhost:5001/api
+
+      - name: Post client test summary
+        if: always()
+        run: |
+          echo "## Client Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "Vitest suite executed for React components" >> $GITHUB_STEP_SUMMARY
+          echo "Covers: PatientPortal, StatusBadge, AIChatWidget" >> $GITHUB_STEP_SUMMARY
+
+  ai-service-tests:
+    name: AI Service Tests (pytest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: ai-service/requirements.txt
+
+      - name: Install dependencies
+        working-directory: ai-service
+        run: pip install -r requirements.txt
+
+      - name: Run pytest
+        working-directory: ai-service
+        run: pytest -v
+        env:
+          OPENAI_API_KEY: fake-key-for-testing
+
+      - name: Post AI service test summary
+        if: always()
+        run: |
+          echo "## AI Service Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "pytest suite executed for FastAPI endpoints" >> $GITHUB_STEP_SUMMARY
+          echo "Covers: health, chat endpoint, all roles, validation, errors" >> $GITHUB_STEP_SUMMARY
+
+  lint:
+    name: ESLint Code Quality
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: client
+        run: npm run lint || true
+        continue-on-error: true
+
+      - name: Post lint summary
+        if: always()
+        run: |
+          echo "## ESLint Results" >> $GITHUB_STEP_SUMMARY
+          echo "ESLint executed on client React/JSX source" >> $GITHUB_STEP_SUMMARY
+
+  npm-audit:
+    name: npm Dependency Audit
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Audit server dependencies
+        working-directory: server
+        run: |
+          npm ci
+          echo "## Server Dependency Audit" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          npm audit --audit-level=high >> $GITHUB_STEP_SUMMARY 2>&1 || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Audit client dependencies
+        working-directory: client
+        run: |
+          npm ci
+          echo "## Client Dependency Audit" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          npm audit --audit-level=high >> $GITHUB_STEP_SUMMARY 2>&1 || true
+          echo '```' >> $GITHUB_STEP_SUMMARY

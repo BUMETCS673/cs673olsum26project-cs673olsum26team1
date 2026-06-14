@@ -11,6 +11,9 @@ const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+  connectionTimeout: 5000,
+  greetingTimeout: 5000,
+  socketTimeout: 5000,
 });
 
 // GET /api/patients
@@ -246,11 +249,11 @@ router.patch('/:id/specialist', verifyAuth, async (req, res) => {
     );
     const requiredFields = REQUIRED_ITEMS[matchedKey] || [];
 
-    // Initialize any required clinical fields still at 'not required' to 'not booked'
+    // Initialize any required clinical fields still at 'not required' to 'not complete'
     const updateData = { visitType: specialistChoice };
     for (const field of requiredFields) {
       if (field !== 'insurance' && existingPatient[field] === 'not required') {
-        updateData[field] = 'not booked';
+        updateData[field] = 'not complete';
       }
     }
 
@@ -316,7 +319,7 @@ router.post('/:id/submit', verifyAuth, async (req, res) => {
         select: { email: true },
       });
 
-      if (user?.email) {
+      if (user?.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         try {
           await transporter.sendMail({
             from: process.env.EMAIL_USER,
