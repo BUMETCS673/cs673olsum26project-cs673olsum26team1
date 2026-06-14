@@ -52,7 +52,7 @@ services:
       EMAIL_PASS: ${EMAIL_PASS}
       PORT: 5001
       NODE_ENV: development
-      CLIENT_URL: "http://localhost:5173"
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
       AI_SERVICE_URL: "http://ai-service:8000"
     depends_on:
       - db
@@ -75,6 +75,20 @@ services:
     volumes:
       - ./client:/app
       - /app/node_modules
+
+  # ---- Nginx reverse proxy (HTTPS) ----
+  nginx:
+    image: nginx:alpine
+    container_name: bariatricpath-nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /root/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
 
 volumes:
   postgres-data:
