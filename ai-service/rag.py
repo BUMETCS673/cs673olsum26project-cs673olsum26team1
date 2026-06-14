@@ -14,6 +14,13 @@ from langchain_core.runnables import RunnablePassthrough
 
 CHROMA_PATH = "./chroma_db"
 
+# Configuration constants for conversation memory
+MEMORY_WINDOW_SIZE = 7   # number of past exchanges kept AND used in the prompt
+
+# Number of ChromaDB documents retrieved per query
+RETRIEVAL_TOP_K = 3
+
+
 # --- Role-based system prompts ---
 # Each role gets a different instruction set but same RAG pipeline
 
@@ -95,7 +102,7 @@ async def get_ai_response(question: str, patient_context: dict, role: str = "PAT
             embedding_function=embeddings
         )
         retriever = vectorstore.as_retriever(
-            search_kwargs={"k": 3, "filter": {"role": metadata_role}}
+            search_kwargs={"k":  RETRIEVAL_TOP_K, "filter": {"role": metadata_role}}
         )
         relevant_docs = retriever.invoke(question)
         retrieved_context = "\n\n".join([doc.page_content for doc in relevant_docs])
@@ -111,7 +118,7 @@ async def get_ai_response(question: str, patient_context: dict, role: str = "PAT
     history_str = ""
     if history:
         history_str = "\n\nPrevious conversation:\n"
-        for msg in history[-7:]:  # only last 7
+        for msg in history[-MEMORY_WINDOW_SIZE:]:  # only last 7
             history_str += f"User: {msg['question']}\nAssistant: {msg['answer']}\n"
 
     # Build prompt with memory included
@@ -132,8 +139,8 @@ async def get_ai_response(question: str, patient_context: dict, role: str = "PAT
     })
 
     # Keep memory from growing too large
-    if len(conversation_memory[session_key]) > 10:
-        conversation_memory[session_key] = conversation_memory[session_key][-10:]
+    if len(conversation_memory[session_key]) > MEMORY_WINDOW_SIZE:
+        conversation_memory[session_key] = conversation_memory[session_key][-MEMORY_WINDOW_SIZE:]
 
     return {
         "answer": answer,
