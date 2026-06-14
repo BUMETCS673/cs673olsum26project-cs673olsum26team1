@@ -66,13 +66,15 @@ const ClinicalChecklist = ({ patient, onPatientUpdate }) => (
   </div>
 );
 
+const normalizeValue = (v) => (v === 'not booked' ? 'not complete' : v) ?? 'not required';
+
 const ClinicalRow = ({ patientId, column, label, currentValue, onSaved }) => {
-  const [selected, setSelected] = useState(currentValue ?? 'not required');
+  const [selected, setSelected] = useState(normalizeValue(currentValue));
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
-    setSelected(currentValue ?? 'not required');
+    setSelected(normalizeValue(currentValue));
   }, [currentValue]);
 
   const handleSave = async () => {
