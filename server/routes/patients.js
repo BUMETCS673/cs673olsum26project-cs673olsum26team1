@@ -249,11 +249,11 @@ router.patch('/:id/specialist', verifyAuth, async (req, res) => {
     );
     const requiredFields = REQUIRED_ITEMS[matchedKey] || [];
 
-    // Initialize any required clinical fields still at 'not required' to 'not booked'
+    // Initialize any required clinical fields still at 'not required' to 'not complete'
     const updateData = { visitType: specialistChoice };
     for (const field of requiredFields) {
       if (field !== 'insurance' && existingPatient[field] === 'not required') {
-        updateData[field] = 'not booked';
+        updateData[field] = 'not complete';
       }
     }
 
