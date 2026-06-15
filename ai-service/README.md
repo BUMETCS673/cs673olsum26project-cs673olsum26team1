@@ -1,10 +1,4 @@
-# AI-USAGE SUMMARY
-# Tools: Claude, ChatGPT
-# Overall AI Contribution: ~60%
-# AI-Assisted Areas: RAG pipeline, prompt templates
-# Human Contributions: data content, role logic, testing
-# Notes: uses langchain-core modern API
-# BariatricPath AI Service
+
 
 A Python FastAPI microservice that powers the AI chat assistant for the BariatricPath
 bariatric surgery coordination platform. It uses Retrieval-Augmented Generation (RAG)
@@ -209,14 +203,6 @@ Your AI will now answer from BariatricPath-specific content.
 
 A `chroma_db/` folder will appear. This is your local vector database.
 
-### Step 6 -- After the container starts, reload ChromaDB data:
-```
-  docker-compose exec ai-service python load_data.py
-
-  docker-compose up --build
-
-  docker-compose up ai-service --build
-```
 
 ### Step 6 — Start the service
 
@@ -577,8 +563,22 @@ docker run -p 8000:8000 --env-file .env bariatricpath-ai
 Or using docker-compose from the project root:
 
 ```bash
-docker-compose up ai-service
+docker-compose up --build
 ```
+
+After the container starts, load the knowledge base into ChromaDB (one-time step,
+or whenever CSV data changes):
+
+```bash
+docker-compose exec ai-service python load_data.py
+```
+
+To rebuild just the AI service after code changes:
+
+```bash
+docker-compose up ai-service --build
+```
+
 
 ---
 
@@ -694,7 +694,3 @@ the same function handles all of them.
 
 All Python files must include the AI-USAGE SUMMARY comment block at the top
 per project requirements. Example:
-
-```python
-
-```
