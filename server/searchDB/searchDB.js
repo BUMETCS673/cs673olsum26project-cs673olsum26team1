@@ -19,7 +19,7 @@ const searchPatients = async (prisma, searchQuery, filters = {}) => {
   try {
     const where = {};
 
-    if (specialistType) where.visitType = specialistType;
+    if (specialistType) where.visitType = { equals: specialistType, mode: 'insensitive' };
     if (insuranceStatus) where.insurance = insuranceStatus;
 
     if (hasSearch) {
