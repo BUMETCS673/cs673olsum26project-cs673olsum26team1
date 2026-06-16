@@ -170,7 +170,7 @@ describe('GET /api/patients', () => {
       mockFindMany.mockResolvedValue([]);
       await request(app).get('/api/patients').query({ specialistType: 'Bariatric Surgeon' });
       const whereClause = mockFindMany.mock.calls[0][0].where;
-      expect(whereClause.visitType).toBe('Bariatric Surgeon');
+      expect(whereClause.visitType).toEqual({ equals: 'Bariatric Surgeon', mode: 'insensitive' });
     });
   });
 
@@ -188,7 +188,7 @@ describe('GET /api/patients', () => {
       mockFindMany.mockResolvedValue([]);
       await request(app).get('/api/patients').query({ specialistType: 'Bariatric Surgeon', insuranceStatus: 'not clear' });
       const whereClause = mockFindMany.mock.calls[0][0].where;
-      expect(whereClause.visitType).toBe('Bariatric Surgeon');
+      expect(whereClause.visitType).toEqual({ equals: 'Bariatric Surgeon', mode: 'insensitive' });
       expect(whereClause.insurance).toBe('not clear');
     });
 
@@ -196,7 +196,7 @@ describe('GET /api/patients', () => {
       mockFindMany.mockResolvedValue([]);
       await request(app).get('/api/patients').query({ search: 'Jane', specialistType: 'Endoscopic Obesity Specialist', insuranceStatus: 'self pay' });
       const whereClause = mockFindMany.mock.calls[0][0].where;
-      expect(whereClause.visitType).toBe('Endoscopic Obesity Specialist');
+      expect(whereClause.visitType).toEqual({ equals: 'Endoscopic Obesity Specialist', mode: 'insensitive' });
       expect(whereClause.insurance).toBe('self pay');
       expect(whereClause.OR.some((c) => c.name?.contains === 'Jane')).toBe(true);
     });
